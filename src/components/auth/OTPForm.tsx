@@ -1,50 +1,101 @@
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, User } from "lucide-react";
 import { toast } from "sonner";
-import { FakeAPI } from "@/lib/fakeApi";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+  InputOTPSeparator,
+} from "../ui/input-otp";
 
 export default function OTPForm() {
-  const { otp, setOtp, setAuthenticated, otpExpired } = useAuthStore();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const {
+    otp,
+    setOtp,
+    setAuthenticated,
+    otpExpired,
+    setStep,
+    setUsername,
+    setOtpExpired,
+  } = useAuthStore();
 
-  const handleVerifyOtp = async () => {
-    if (!otp.trim()) {
-      setError("OTP is required.");
+  const handleVerify = async () => {
+    if (otp.length < 6) {
+      toast.error("Please enter the full 6-digit OTP.");
       return;
     }
 
-    setError("");
-    setLoading(true);
     try {
-      await FakeAPI.verifyOtp(otp);
-      toast.success("OTP verified. Welcome!");
-      setAuthenticated(true);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message);
-      } else {
-        toast.error("Verification failed.");
+      toast.loading("Verifying...");
+      await new Promise((res) => setTimeout(res, 1000));
+
+      if (otp !== "123456") {
+        toast.dismiss();
+        toast.error("Invalid OTP.");
+        return;
       }
-    } finally {
-      setLoading(false);
+
+      toast.dismiss();
+      toast.success("OTP verified!");
+      setAuthenticated(true);
+    } catch {
+      toast.dismiss();
+      toast.error("Something went wrong.");
     }
   };
 
+  const handleSwitchAccount = () => {
+    setOtp("");
+    setUsername("");
+    setOtpExpired(false); // ✅ Reset OTP expiration
+    setStep(1); // Back to username/password form
+  };
+
   return (
-    <div className="space-y-4">
-      <Input
-        placeholder="Enter OTP"
-        value={otp}
-        onChange={(e) => setOtp(e.target.value)}
-        disabled={otpExpired}
-      />
-      {error && <p className="text-sm text-red-500">{error}</p>}
-      <Button onClick={handleVerifyOtp} disabled={loading || otpExpired}>
-        {otpExpired ? "OTP Expired" : loading ? "Verifying..." : "Verify OTP"}
-      </Button>
+    <div className="space-y-6 text-center">
+      <p className="text-lg font-semibold">Enter the 6-digit OTP</p>
+
+      <div className="flex justify-center">
+        <InputOTP
+          maxLength={6}
+          value={otp}
+          onChange={setOtp}
+          disabled={otpExpired}
+        >
+          <InputOTPGroup>
+            <InputOTPSlot index={0} />
+            <InputOTPSlot index={1} />
+            <InputOTPSlot index={2} />
+          </InputOTPGroup>
+          <InputOTPSeparator />
+          <InputOTPGroup>
+            <InputOTPSlot index={3} />
+            <InputOTPSlot index={4} />
+            <InputOTPSlot index={5} />
+          </InputOTPGroup>
+        </InputOTP>
+      </div>
+
+      <div className="flex flex-col items-center gap-2">
+        <Button
+          onClick={handleVerify}
+          disabled={otp.length < 6 || otpExpired}
+          className="flex items-center gap-2"
+        >
+          <CheckCircle className="w-4 h-4" />
+          Verify OTP
+        </Button>
+
+        <Button
+          variant="ghost"
+          onClick={handleSwitchAccount}
+          className="text-xs text-muted-foreground mx-auto"
+        >
+          <User className="w-3.5 h-3.5 mr-1" />
+          Use a different account
+        </Button>
+      </div>
     </div>
   );
 }
