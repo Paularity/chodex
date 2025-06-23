@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
-import { FakeAPI } from "@/lib/fakeApi";
 import { z } from "zod";
 import { LogIn } from "lucide-react";
+import { AuthService } from "@/lib/api/auth/service";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required."),
@@ -19,25 +19,25 @@ export default function AuthForm() {
 
   const handleLogin = async () => {
     const result = loginSchema.safeParse({ username, password });
+
     if (!result.success) {
-      const message = result.error.errors[0]?.message || "Invalid input.";
-      setError(message);
+      const firstError =
+        result.error.issues[0]?.message || "Validation failed.";
+      setError(firstError);
       return;
     }
 
     setError("");
     setLoading(true);
     try {
-      const randomFail = Math.random() < 0.1;
-      if (randomFail) {
-        throw new Error("Username is invalid. Please try again.");
-      }
+      const { mfaRegistered } = await AuthService.login(username, password);
 
-      await FakeAPI.sendOtp(username);
-      toast.success("OTP sent successfully!");
-      setStep(2);
+      toast.success("Login successful!");
+      setStep(mfaRegistered ? 3 : 2);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong.");
+      toast.error(
+        err instanceof Error ? err.message : "Invalid username or password."
+      );
     } finally {
       setLoading(false);
     }
