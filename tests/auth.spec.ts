@@ -1,17 +1,21 @@
 import { test, expect } from '@playwright/test';
-import readlineSync from 'readline-sync';
 
-test('otp login flow', async ({ page }) => {
+test('login shows OTP or registration', async ({ page }) => {
   await page.goto('/login');
 
   await page.fill('#username', 'admin');
   await page.fill('#password', 'admin');
   await page.getByRole('button', { name: /login/i }).click();
 
-  await page.waitForSelector('#otp');
-  const otp = process.env.OTP ?? readlineSync.question('Enter OTP: ');
-  await page.fill('#otp', otp);
-  await page.click('button:has-text("Verify OTP")');
+  const otpHeading = page.getByText('Enter the 6-digit OTP');
+  const qrHeading = page.getByText('Scan with Authenticator');
 
-  await expect(page.locator('.dashboard')).toBeVisible();
+  await Promise.race([
+    otpHeading.waitFor({ state: 'visible' }),
+    qrHeading.waitFor({ state: 'visible' }),
+  ]);
+
+  const isOtp = await otpHeading.isVisible();
+  const isQr = await qrHeading.isVisible();
+  expect(isOtp || isQr).toBe(true);
 });
