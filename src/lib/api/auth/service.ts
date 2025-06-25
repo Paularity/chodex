@@ -13,9 +13,9 @@ export const AuthService = {
   },
 
   registerMfa: async (sessionToken: string) => {
-    const response = await axios.post(
-      AuthEndpoints.registerMfa + "/" + sessionToken
-    );
+    const response = await axios.post(AuthEndpoints.registerMfa, {
+      sessionToken,
+    });
     return response.data as RegisterMfaResponse;
   },
 
