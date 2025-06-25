@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import { HomeIcon, LogOut } from "lucide-react";
 
 export default function HomePage() {
-  const { username, setAuthenticated, setStep, setOtpExpired } = useAuthStore();
+  const { username, reset } = useAuthStore();
 
   const handleLogout = () => {
-    setAuthenticated(false);
-    setStep(1);
-    setOtpExpired(false);
+    reset();
   };
 
   return (

@@ -9,6 +9,7 @@ import {
   InputOTPSeparator,
 } from "../ui/input-otp";
 import { AuthService } from "@/lib/api/auth/service";
+import type { AxiosError } from "axios";
 
 export default function OTPForm() {
   const {
@@ -46,9 +47,13 @@ export default function OTPForm() {
       toast.success("OTP verified!");
       setAuthenticated(true);
     } catch (err) {
-      console.error("OTP Error", err);
       toast.dismiss();
-      toast.error("Something went wrong.");
+
+      const error = err as AxiosError<{ error: string }>;
+      const message = error.response?.data?.error || "Something went wrong.";
+
+      console.error("OTP Error:", message);
+      toast.error(message);
     }
   };
 

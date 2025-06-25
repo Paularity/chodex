@@ -6,7 +6,7 @@ import { QrCode, User } from "lucide-react";
 import { AuthService } from "@/lib/api/auth/service";
 
 export default function QRCodeForm() {
-  const { setStep, username, setOtpExpired, setUsername, setPassword } =
+  const { setStep, sessionToken, setOtpExpired, setUsername, setPassword } =
     useAuthStore();
 
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function QRCodeForm() {
   useEffect(() => {
     const fetchQRCode = async () => {
       try {
-        const res = await AuthService.registerMfa(username);
+        const res = await AuthService.registerMfa(sessionToken);
         setQrCodeBase64(res.data?.qrCodeImageBase64);
       } catch (error) {
         console.error("QR Code generation failed:", error);
@@ -32,7 +32,7 @@ export default function QRCodeForm() {
     };
 
     fetchQRCode();
-  }, [username]);
+  }, [sessionToken]);
 
   const handleSwitchAccount = () => {
     setUsername("");
