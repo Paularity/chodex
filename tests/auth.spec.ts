@@ -82,9 +82,8 @@ test.describe('auth flow', () => {
     // Should show OTP form
     await expect(page.getByText('Enter the 6-digit OTP')).toBeVisible();
 
-    // Fill OTP digits by typing into the first slot
-    await page.locator('[data-slot="input-otp-slot"]').first().click();
-    await page.keyboard.type('123456');
+    // Fill OTP digits directly into the underlying input
+    await page.locator('input[data-input-otp="true"]').fill('123456');
     // Wait for verify button to become enabled
     await page.getByRole('button', { name: /verify otp/i }).click();
 
