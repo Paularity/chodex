@@ -74,6 +74,7 @@ export default function OTPForm() {
           value={otp}
           onChange={setOtp}
           disabled={otpExpired}
+          name="otp"
         >
           <InputOTPGroup>
             <InputOTPSlot index={0} />
