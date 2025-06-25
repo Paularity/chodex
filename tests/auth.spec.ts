@@ -1,12 +1,22 @@
 import { test, expect } from '@playwright/test';
+import readline from 'readline';
 
-test('login flow', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByRole('heading', { name: /login to chodex/i })).toBeVisible();
+function askQuestion(query: string): Promise<string> {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise(resolve => rl.question(query, ans => { rl.close(); resolve(ans); }));
+}
 
-  await page.getByLabel('Username').fill('john');
-  await page.getByLabel('Password').fill('password');
+test('otp login flow', async ({ page }) => {
+  await page.goto('/login');
+
+  await page.fill('#username', 'admin');
+  await page.fill('#password', 'admin');
   await page.getByRole('button', { name: /login/i }).click();
 
-  await expect(page.getByText(/scan with authenticator|enter the 6-digit otp/i)).toBeVisible();
+  await page.waitForSelector('#otp');
+  const otp = await askQuestion('Enter OTP: ');
+  await page.fill('#otp', otp);
+  await page.click('button:has-text("Verify OTP")');
+
+  await expect(page.locator('.dashboard')).toBeVisible();
 });
