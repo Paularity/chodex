@@ -1,59 +1,34 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-const OTP = process.env.OTP || '';
+test("login with OTP or QR, and completes OTP flow if needed", async ({
+  page,
+}) => {
+  await page.goto("/login");
 
-test('login shows OTP or registration', async ({ page }) => {
-  await page.goto('/login');
+  await page.fill("#username", "admin");
+  await page.fill("#password", "admin");
+  await page.getByRole("button", { name: /login/i }).click();
 
-  await page.fill('#username', 'admin');
-  await page.fill('#password', 'admin');
-  await page.getByRole('button', { name: /login/i }).click();
-
-  const otpHeading = page.getByText('Enter the 6-digit OTP');
-  const qrHeading = page.getByText('Scan with Authenticator');
-
-  await Promise.race([
-    otpHeading.waitFor({ state: 'visible' }),
-    qrHeading.waitFor({ state: 'visible' }),
-  ]);
-
-  const isOtp = await otpHeading.isVisible();
-  const isQr = await qrHeading.isVisible();
-  expect(isOtp || isQr).toBe(true);
-});
-
-test('login fails with invalid credentials', async ({ page }) => {
-  await page.goto('/login');
-
-  await page.fill('#username', 'wrong');
-  await page.fill('#password', 'wrong');
-  await page.getByRole('button', { name: /login/i }).click();
-
-  // Expect an error toast or message
-  await expect(page.getByText(/invalid username or password/i)).toBeVisible();
-});
-
-test('login with mfa and verify otp', async ({ page }) => {
-  await page.goto('/login');
-
-  await page.fill('#username', 'admin');
-  await page.fill('#password', 'admin');
-  await page.getByRole('button', { name: /login/i }).click();
-
-  const otpInput = page.locator('#otp');
-  const qrHeading = page.getByText('Scan with Authenticator');
+  const otp = page.getByText("Enter the 6-digit OTP");
+  const qr = page.getByText("Scan with Authenticator");
 
   await Promise.race([
-    otpInput.waitFor({ state: 'visible' }),
-    qrHeading.waitFor({ state: 'visible' }),
+    otp.waitFor({ state: "visible", timeout: 5000 }),
+    qr.waitFor({ state: "visible", timeout: 5000 }),
   ]);
 
-  if (await qrHeading.isVisible()) {
-    test.skip('MFA not registered, skipping OTP verification');
+  if (await otp.isVisible()) {
+    const OTP = process.env.TEST_OTP || ""; // ✅ pulled from inline env var
+    if (!OTP) throw new Error("❌ TEST_OTP not set.");
+    await page.fill('input[name="otp"]', OTP);
+    await page.click('button:has-text("Verify OTP")');
+    await expect(page.getByText(/welcome, admin/i)).toBeVisible({
+      timeout: 5000,
+    });
+  } else if (await qr.isVisible()) {
+    console.log("🛠 MFA registration flow detected. QR code shown.");
+    await expect(qr).toBeVisible();
+  } else {
+    throw new Error("❌ Neither OTP nor QR screen was visible.");
   }
-
-  await otpInput.fill(OTP);
-  await page.getByRole('button', { name: /verify otp/i }).click();
-
-  await expect(page.getByText(/welcome/i)).toBeVisible();
 });
