@@ -16,8 +16,6 @@ interface AuthState {
   setAuthenticated: (auth: boolean) => void;
   setOtpExpired: (expired: boolean) => void;
   reset: () => void;
-}
-
 export const useAuthStore = create<AuthState>((set) => {
   const initialState = {
     step: 1,
@@ -31,6 +29,21 @@ export const useAuthStore = create<AuthState>((set) => {
 
   return {
     ...initialState,
+
+    setStep: (step) => set({ step }),
+    setUsername: (username) => set({ username }),
+    setPassword: (password) => set({ password }),
+    setOtp: (otp) => set({ otp }),
+    setSessionToken: (token) => set({ sessionToken: token }),
+    setAuthenticated: (auth) => set({ isAuthenticated: auth }),
+    setOtpExpired: (expired) => set({ otpExpired: expired }),
+
+    reset: () =>
+      set({
+        ...initialState,
+      }),
+  };
+});
 
     setStep: (step) => set({ step }),
     setUsername: (username) => set({ username }),

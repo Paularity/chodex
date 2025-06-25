@@ -11,6 +11,11 @@ import {
 import { AuthService } from "@/lib/api/auth/service";
 import type { AxiosError } from "axios";
 
+      const error = err as AxiosError<{ error: string }>;
+      const message = error.response?.data?.error || "Something went wrong.";
+
+      console.error("OTP Error:", message);
+      toast.error(message);
 export default function OTPForm() {
   const {
     otp,

@@ -7,8 +7,6 @@ export default function HomePage() {
 
   const handleLogout = () => {
     reset();
-  };
-
   return (
     <div className="flex flex-col items-center justify-center h-screen space-y-6">
       <div className="flex items-center gap-2 text-2xl font-bold">
