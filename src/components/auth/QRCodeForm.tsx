@@ -24,7 +24,7 @@ export default function QRCodeForm() {
     const fetchQRCode = async () => {
       try {
         const res = await AuthService.registerMfa(username);
-        setQrCodeBase64(res.qrCodeImageBase64);
+        setQrCodeBase64(res.data?.qrCodeImageBase64);
       } catch (error) {
         console.error("QR Code generation failed:", error);
         toast.error("Failed to generate QR code. Please try again.");

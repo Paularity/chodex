@@ -8,10 +8,12 @@ import {
   InputOTPSlot,
   InputOTPSeparator,
 } from "../ui/input-otp";
+import { AuthService } from "@/lib/api/auth/service";
 
 export default function OTPForm() {
   const {
     otp,
+    sessionToken,
     setOtp,
     setAuthenticated,
     otpExpired,
@@ -28,18 +30,23 @@ export default function OTPForm() {
 
     try {
       toast.loading("Verifying...");
-      await new Promise((res) => setTimeout(res, 1000));
 
-      if (otp !== "123456") {
-        toast.dismiss();
-        toast.error("Invalid OTP.");
+      const response = await AuthService.verifyTotp(sessionToken, otp);
+
+      toast.dismiss();
+
+      if (!response.success || !response.data?.token) {
+        toast.error("Invalid OTP or verification failed.");
         return;
       }
 
-      toast.dismiss();
+      // You can optionally store the token here
+      // localStorage.setItem("token", response.data.token);
+
       toast.success("OTP verified!");
       setAuthenticated(true);
-    } catch {
+    } catch (err) {
+      console.error("OTP Error", err);
       toast.dismiss();
       toast.error("Something went wrong.");
     }

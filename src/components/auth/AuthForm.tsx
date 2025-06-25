@@ -12,7 +12,7 @@ const loginSchema = z.object({
 });
 
 export default function AuthForm() {
-  const { username, setUsername, setStep } = useAuthStore();
+  const { username, setUsername, setStep, setSessionToken } = useAuthStore();
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,10 +30,11 @@ export default function AuthForm() {
     setError("");
     setLoading(true);
     try {
-      const { mfaRegistered } = await AuthService.login(username, password);
+      const { data } = await AuthService.login(username, password);
 
-      toast.success("Login successful!");
-      setStep(mfaRegistered ? 3 : 2);
+      // toast.success("Login successful!");
+      setStep(data.mfaRegistered ? 3 : 2);
+      setSessionToken(data.sessionToken);
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : "Invalid username or password."
