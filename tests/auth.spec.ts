@@ -32,8 +32,8 @@ test.describe('auth flow', () => {
     });
 
     await page.goto('/');
-    await page.fill('#username', 'john');
-    await page.fill('#password', 'password');
+    await page.getByLabel('Username').fill('john');
+    await page.getByLabel('Password').fill('password');
     await page.getByRole('button', { name: /login/i }).click();
 
     await expect(page.getByText('Scan with Authenticator')).toBeVisible();
@@ -73,8 +73,8 @@ test.describe('auth flow', () => {
     });
 
     await page.goto('/');
-    await page.fill('#username', 'john');
-    await page.fill('#password', 'password');
+    await page.getByLabel('Username').fill('john');
+    await page.getByLabel('Password').fill('password');
     await page.getByRole('button', { name: /login/i }).click();
 
     // Should show OTP form
