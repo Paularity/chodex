@@ -32,6 +32,7 @@ test.describe('auth flow', () => {
     });
 
     await page.goto('/');
+    await expect(page.getByRole('heading', { name: /login to chodex/i })).toBeVisible();
     await page.getByLabel('Username').fill('john');
     await page.getByLabel('Password').fill('password');
     await page.getByRole('button', { name: /login/i }).click();
@@ -73,6 +74,7 @@ test.describe('auth flow', () => {
     });
 
     await page.goto('/');
+    await expect(page.getByRole('heading', { name: /login to chodex/i })).toBeVisible();
     await page.getByLabel('Username').fill('john');
     await page.getByLabel('Password').fill('password');
     await page.getByRole('button', { name: /login/i }).click();
