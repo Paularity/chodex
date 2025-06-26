@@ -1,15 +1,29 @@
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
-import { LogOut, Menu, HomeIcon, Settings as SettingsIcon } from "lucide-react";
+import {
+  LogOut,
+  Menu,
+  HomeIcon,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import HomePage from "../pages/Home";
 import SettingsPage from "../pages/Settings";
+import ProfilePage from "../pages/Profile";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export default function AuthenticatedLayout() {
   const { user, username, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [page, setPage] = useState<"home" | "settings">("home");
+  const [page, setPage] = useState<"home" | "settings" | "profile">("home");
 
   const handleLogout = () => {
     logout();
@@ -50,7 +64,7 @@ export default function AuthenticatedLayout() {
       {/* Main content */}
       <div className="flex flex-col flex-1">
         {/* Top navbar */}
-        <div className="flex items-center justify-between border-b bg-card p-4">
+        <div className="flex items-center justify-between border-b bg-primary text-primary-foreground p-4">
           <Button
             size="icon"
             variant="ghost"
@@ -60,13 +74,30 @@ export default function AuthenticatedLayout() {
             <Menu className="w-5 h-5" />
           </Button>
           <div className="font-semibold">{user || username || "User"}</div>
-          <Button variant="ghost" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" /> Logout
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Avatar>
+                  <AvatarFallback>
+                    {(user || username || "U").slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => setPage("profile")}>Profile</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setPage("settings")}>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" /> Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="flex-1 overflow-auto p-4">
           {page === "home" && <HomePage />}
           {page === "settings" && <SettingsPage />}
+          {page === "profile" && <ProfilePage />}
         </div>
       </div>
     </div>
