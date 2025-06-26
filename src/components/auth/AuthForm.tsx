@@ -13,6 +13,7 @@ import { z } from "zod";
 import { LogIn } from "lucide-react";
 import { AuthService } from "@/lib/api/auth/service";
 import { DEFAULT_TENANT_ID } from "@/lib/api";
+import type { AxiosError } from "axios";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required."),
@@ -51,10 +52,13 @@ export default function AuthForm() {
       // toast.success("Login successful!");
       setStep(data.mfaRegistered ? 3 : 2);
       setSessionToken(data.sessionToken);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Invalid username or password."
-      );
+    } catch (err) {
+      toast.dismiss();
+
+      const error = err as AxiosError<{ error: string }>;
+      const message = error.response?.data?.error || "Something went wrong.";
+      console.error("Auth Error:", message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
