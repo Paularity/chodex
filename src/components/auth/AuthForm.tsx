@@ -21,11 +21,15 @@ const loginSchema = z.object({
 });
 
 export default function AuthForm() {
-  const { username, setUsername, setStep, setSessionToken } = useAuthStore();
+  const {
+    username,
+    setUsername,
+    setStep,
+    setSessionToken,
+    tenantId,
+    setTenantId,
+  } = useAuthStore();
   const [password, setPassword] = useState("");
-  const [tenantId, setTenantId] = useState(
-    "11111111-1111-1111-1111-111111111111"
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

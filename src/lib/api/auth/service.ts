@@ -13,18 +13,30 @@ export const AuthService = {
     return response.data as LoginResponse;
   },
 
-  registerMfa: async (sessionToken: string) => {
-    const response = await axios.post(AuthEndpoints.registerMfa, {
-      sessionToken,
-    });
+  registerMfa: async (sessionToken: string, tenantId: string) => {
+    const response = await axios.post(
+      AuthEndpoints.registerMfa,
+      {
+        sessionToken,
+      },
+      {
+        headers: { "X-Tenant-Id": tenantId },
+      }
+    );
     return response.data as RegisterMfaResponse;
   },
 
-  verifyTotp: async (sessionToken: string, code: string) => {
-    const response = await axios.post(AuthEndpoints.verifyOtp, {
-      sessionToken,
-      code,
-    });
+  verifyTotp: async (sessionToken: string, code: string, tenantId: string) => {
+    const response = await axios.post(
+      AuthEndpoints.verifyOtp,
+      {
+        sessionToken,
+        code,
+      },
+      {
+        headers: { "X-Tenant-Id": tenantId },
+      }
+    );
     return response.data as VerifyOtpResponse;
   },
 

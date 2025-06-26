@@ -9,6 +9,7 @@ import {
   InputOTPSeparator,
 } from "../ui/input-otp";
 import { AuthService } from "@/lib/api/auth/service";
+import { DEFAULT_TENANT_ID } from "@/lib/api";
 import type { AxiosError } from "axios";
 
 export default function OTPForm() {
@@ -21,6 +22,8 @@ export default function OTPForm() {
     setStep,
     setUsername,
     setOtpExpired,
+    setTenantId,
+    tenantId,
   } = useAuthStore();
 
   const handleVerify = async () => {
@@ -32,7 +35,7 @@ export default function OTPForm() {
     try {
       toast.loading("Verifying...");
 
-      const response = await AuthService.verifyTotp(sessionToken, otp);
+      const response = await AuthService.verifyTotp(sessionToken, otp, tenantId);
 
       toast.dismiss();
 
@@ -60,6 +63,7 @@ export default function OTPForm() {
   const handleSwitchAccount = () => {
     setOtp("");
     setUsername("");
+    setTenantId(DEFAULT_TENANT_ID);
     setOtpExpired(false); // ✅ Reset OTP expiration
     setStep(1); // Back to username/password form
   };
