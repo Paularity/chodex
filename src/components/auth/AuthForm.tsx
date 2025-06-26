@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { LogIn } from "lucide-react";
 import { AuthService } from "@/lib/api/auth/service";
+import { DEFAULT_TENANT_ID } from "@/lib/api";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required."),
@@ -22,7 +23,9 @@ const loginSchema = z.object({
 export default function AuthForm() {
   const { username, setUsername, setStep, setSessionToken } = useAuthStore();
   const [password, setPassword] = useState("");
-  const [tenantId, setTenantId] = useState("11111111-1111-1111-1111-111111111111");
+  const [tenantId, setTenantId] = useState(
+    "11111111-1111-1111-1111-111111111111"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -101,19 +104,29 @@ export default function AuthForm() {
       </div>
 
       {/* Tenant dropdown */}
-      <Select value={tenantId} onValueChange={setTenantId}>
-        <SelectTrigger id="tenant" className="w-full">
-          <SelectValue placeholder="Select tenant" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="11111111-1111-1111-1111-111111111111">
-            Tenant 1
-          </SelectItem>
-          <SelectItem value="22222222-2222-2222-2222-222222222222">
-            Tenant 2
-          </SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="relative w-full">
+        <label
+          htmlFor="tenant"
+          className="absolute left-3 top-1 text-xs text-muted-foreground transition-all 
+      peer-placeholder-shown:top-[10px] 
+      peer-placeholder-shown:text-sm 
+      peer-placeholder-shown:text-gray-400 
+      peer-focus:top-1 
+      peer-focus:text-xs 
+      peer-focus:text-blue-500"
+        >
+          Tenant
+        </label>
+
+        <Select value={tenantId} onValueChange={setTenantId}>
+          <SelectTrigger id="tenant" className="peer">
+            <SelectValue placeholder=" " />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={DEFAULT_TENANT_ID}>Test Tenant</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Login button */}
       <Button
