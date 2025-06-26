@@ -4,10 +4,11 @@ import type { LoginResponse } from "../models/login-response.model";
 import type { RegisterMfaResponse } from "../models/register-mfa-response.model";
 import type { VerifyOtpResponse } from "../models/verify-otp-response.model";
 export const AuthService = {
-  login: async (username: string, password: string) => {
+  login: async (username: string, password: string, tenantId: string) => {
     const response = await axios.post(AuthEndpoints.login, {
       username,
       password,
+      tenantId,
     });
     return response.data as LoginResponse;
   },

@@ -1,24 +1,36 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
 import { z } from "zod";
 import { LogIn } from "lucide-react";
 import { AuthService } from "@/lib/api/auth/service";
+import { DEFAULT_TENANT_ID } from "@/lib/api";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required."),
   password: z.string().min(1, "Password is required."),
+  tenantId: z.string().min(1, "Tenant is required."),
 });
 
 export default function AuthForm() {
   const { username, setUsername, setStep, setSessionToken } = useAuthStore();
   const [password, setPassword] = useState("");
+  const [tenantId, setTenantId] = useState(
+    "11111111-1111-1111-1111-111111111111"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
-    const result = loginSchema.safeParse({ username, password });
+    const result = loginSchema.safeParse({ username, password, tenantId });
 
     if (!result.success) {
       const firstError =
@@ -30,7 +42,7 @@ export default function AuthForm() {
     setError("");
     setLoading(true);
     try {
-      const { data } = await AuthService.login(username, password);
+      const { data } = await AuthService.login(username, password, tenantId);
 
       // toast.success("Login successful!");
       setStep(data.mfaRegistered ? 3 : 2);
@@ -89,6 +101,31 @@ export default function AuthForm() {
         >
           Password
         </label>
+      </div>
+
+      {/* Tenant dropdown */}
+      <div className="relative w-full">
+        <label
+          htmlFor="tenant"
+          className="absolute left-3 top-1 text-xs text-muted-foreground transition-all 
+      peer-placeholder-shown:top-[10px] 
+      peer-placeholder-shown:text-sm 
+      peer-placeholder-shown:text-gray-400 
+      peer-focus:top-1 
+      peer-focus:text-xs 
+      peer-focus:text-blue-500"
+        >
+          Tenant
+        </label>
+
+        <Select value={tenantId} onValueChange={setTenantId}>
+          <SelectTrigger id="tenant" className="peer">
+            <SelectValue placeholder=" " />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={DEFAULT_TENANT_ID}>Test Tenant</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Login button */}
