@@ -10,9 +10,9 @@ import {
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "sonner";
 import { z } from "zod";
-import { LogIn } from "lucide-react";
+import { Loader2, LogIn } from "lucide-react";
 import { AuthService } from "@/lib/api/auth/service";
-import { DEFAULT_TENANT_ID } from "@/lib/api";
+import { DEFAULT_FAILED_TENANT_ID, DEFAULT_TENANT_ID } from "@/lib/api";
 import type { AxiosError } from "axios";
 
 const loginSchema = z.object({
@@ -132,6 +132,9 @@ export default function AuthForm() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={DEFAULT_TENANT_ID}>Test Tenant</SelectItem>
+            <SelectItem value={DEFAULT_FAILED_TENANT_ID}>
+              Failed Tenant
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -142,8 +145,17 @@ export default function AuthForm() {
         disabled={loading}
         className="w-full h-[44px] flex items-center justify-center gap-2"
       >
-        <span>{loading ? "Logging in..." : "Login"}</span>
-        <LogIn className="w-4 h-4" />
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Logging in...
+          </>
+        ) : (
+          <>
+            <LogIn className="w-4 h-4" />
+            Login
+          </>
+        )}
       </Button>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
