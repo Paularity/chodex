@@ -8,6 +8,6 @@ export default function App() {
     document.title = "Chodex";
   }, []);
 
-  const { isAuthenticated } = useAuthStore();
-  return isAuthenticated ? <HomePage /> : <AuthPage />;
+  const { isAuthenticated, token } = useAuthStore();
+  return isAuthenticated && token ? <HomePage /> : <AuthPage />;
 }

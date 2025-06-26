@@ -7,6 +7,9 @@ afterEach(() => {
     username: '',
     tenantId: '11111111-1111-1111-1111-111111111111',
     otp: '',
+    sessionToken: '',
+    token: '',
+    user: '',
     isAuthenticated: false,
     otpExpired: false,
   });

@@ -21,6 +21,9 @@ export default function OTPForm() {
     sessionToken,
     setOtp,
     setAuthenticated,
+    setToken,
+    setUser,
+    username,
     otpExpired,
     setStep,
     setUsername,
@@ -46,6 +49,8 @@ export default function OTPForm() {
         return;
       }
 
+      setToken(response.data.token);
+      setUser(username);
       setAuthenticated(true);
     } catch (err) {
       const error = err as AxiosError<{ error: string }>;
