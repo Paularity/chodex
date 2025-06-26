@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, User } from "lucide-react";
+import { CheckCircle, Loader2, User } from "lucide-react";
 import { toast } from "sonner";
 import {
   InputOTP,
@@ -9,9 +9,13 @@ import {
   InputOTPSeparator,
 } from "../ui/input-otp";
 import { AuthService } from "@/lib/api/auth/service";
+import { DEFAULT_TENANT_ID } from "@/lib/api";
 import type { AxiosError } from "axios";
+import { useState } from "react";
 
 export default function OTPForm() {
+  const [verifying, setVerifying] = useState(false);
+
   const {
     otp,
     sessionToken,
@@ -21,47 +25,44 @@ export default function OTPForm() {
     setStep,
     setUsername,
     setOtpExpired,
+    setTenantId,
+    tenantId,
   } = useAuthStore();
 
   const handleVerify = async () => {
-    if (otp.length < 6) {
-      toast.error("Please enter the full 6-digit OTP.");
-      return;
-    }
+    if (otp.length < 6) return;
+
+    setVerifying(true);
 
     try {
-      toast.loading("Verifying...");
-
-      const response = await AuthService.verifyTotp(sessionToken, otp);
-
-      toast.dismiss();
+      const response = await AuthService.verifyTotp(
+        sessionToken,
+        otp,
+        tenantId
+      );
 
       if (!response.success || !response.data?.token) {
         toast.error("Invalid OTP or verification failed.");
         return;
       }
 
-      // You can optionally store the token here
-      // localStorage.setItem("token", response.data.token);
-
-      toast.success("OTP verified!");
       setAuthenticated(true);
     } catch (err) {
-      toast.dismiss();
-
       const error = err as AxiosError<{ error: string }>;
       const message = error.response?.data?.error || "Something went wrong.";
-
       console.error("OTP Error:", message);
       toast.error(message);
+    } finally {
+      setVerifying(false);
     }
   };
 
   const handleSwitchAccount = () => {
     setOtp("");
     setUsername("");
-    setOtpExpired(false); // ✅ Reset OTP expiration
-    setStep(1); // Back to username/password form
+    setTenantId(DEFAULT_TENANT_ID);
+    setOtpExpired(false);
+    setStep(1);
   };
 
   return (
@@ -93,11 +94,20 @@ export default function OTPForm() {
       <div className="flex flex-col items-center gap-2">
         <Button
           onClick={handleVerify}
-          disabled={otp.length < 6 || otpExpired}
+          disabled={otp.length < 6 || otpExpired || verifying}
           className="flex items-center gap-2"
         >
-          <CheckCircle className="w-4 h-4" />
-          Verify OTP
+          {verifying ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Verifying...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-4 h-4" />
+              Verify OTP
+            </>
+          )}
         </Button>
 
         <Button

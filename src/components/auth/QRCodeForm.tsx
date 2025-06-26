@@ -4,10 +4,18 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { QrCode, User } from "lucide-react";
 import { AuthService } from "@/lib/api/auth/service";
+import { DEFAULT_TENANT_ID } from "@/lib/api";
 
 export default function QRCodeForm() {
-  const { setStep, sessionToken, setOtpExpired, setUsername, setPassword } =
-    useAuthStore();
+  const {
+    setStep,
+    sessionToken,
+    setOtpExpired,
+    setUsername,
+    setPassword,
+    tenantId,
+    setTenantId,
+  } = useAuthStore();
 
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
 
@@ -23,7 +31,7 @@ export default function QRCodeForm() {
   useEffect(() => {
     const fetchQRCode = async () => {
       try {
-        const res = await AuthService.registerMfa(sessionToken);
+        const res = await AuthService.registerMfa(sessionToken, tenantId);
         setQrCodeBase64(res.data?.qrCodeImageBase64);
       } catch (error) {
         console.error("QR Code generation failed:", error);
@@ -32,11 +40,12 @@ export default function QRCodeForm() {
     };
 
     fetchQRCode();
-  }, [sessionToken]);
+  }, [sessionToken, tenantId]);
 
   const handleSwitchAccount = () => {
     setUsername("");
     setPassword("");
+    setTenantId(DEFAULT_TENANT_ID);
     setStep(1);
   };
 
