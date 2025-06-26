@@ -37,6 +37,8 @@ test("login with OTP or QR", async ({ page }) => {
   await page.goto("/login");
   await page.fill("#username", "admin");
   await page.fill("#password", "admin");
+  await page.getByRole("combobox").click();
+  await page.getByRole("option", { name: "Tenant 1" }).click();
   await page.getByRole("button", { name: /login/i }).click();
 
   const otp = page.getByText("Enter the 6-digit OTP");
@@ -64,6 +66,8 @@ test("logout resets session", async ({ page }) => {
   await page.goto("/login");
   await page.fill("#username", "admin");
   await page.fill("#password", "admin");
+  await page.getByRole("combobox").click();
+  await page.getByRole("option", { name: "Tenant 1" }).click();
   await page.getByRole("button", { name: /login/i }).click();
 
   const otp = page.getByText("Enter the 6-digit OTP");
