@@ -45,7 +45,7 @@ export default function AuthenticatedLayout() {
           <span className="text-xl font-bold">Chodex</span>
           <Button
             size="icon"
-            variant="ghost"
+            variant="outline"
             className="rounded-full text-sidebar-foreground"
             onClick={() => setCollapsed((c) => !c)}
           >
@@ -103,7 +103,7 @@ export default function AuthenticatedLayout() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Avatar>
-                  <AvatarFallback className="p-1">
+                  <AvatarFallback className="p-1 text-muted-foreground">
                     <User className="w-4 h-4" />
                   </AvatarFallback>
                 </Avatar>

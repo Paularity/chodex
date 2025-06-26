@@ -5,11 +5,30 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { SimpleLineChart } from "@/components/ui/line-chart";
+import { SimpleBarChart } from "@/components/ui/bar-chart";
 import { useAuthStore } from "@/store/authStore";
 import { HomeIcon } from "lucide-react";
 
 export default function HomePage() {
   const { user, username } = useAuthStore();
+
+  const lineData = [
+    { name: "Jan", value: 20 },
+    { name: "Feb", value: 30 },
+    { name: "Mar", value: 28 },
+    { name: "Apr", value: 35 },
+    { name: "May", value: 40 },
+  ];
+
+  const barData = [
+    { name: "A", value: 12 },
+    { name: "B", value: 19 },
+    { name: "C", value: 7 },
+    { name: "D", value: 14 },
+    { name: "E", value: 9 },
+  ];
 
   return (
     <div className="space-y-6">
@@ -62,16 +81,16 @@ export default function HomePage() {
           <CardHeader>
             <CardTitle>Graph</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-full items-center justify-center">
-            <div className="text-muted-foreground">Graph Placeholder</div>
+          <CardContent className="h-full">
+            <SimpleLineChart data={lineData} className="h-full" />
           </CardContent>
         </Card>
         <Card className="h-64">
           <CardHeader>
             <CardTitle>Chart</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-full items-center justify-center">
-            <div className="text-muted-foreground">Chart Placeholder</div>
+          <CardContent className="h-full">
+            <SimpleBarChart data={barData} className="h-full" />
           </CardContent>
         </Card>
       </div>
@@ -110,8 +129,8 @@ export default function HomePage() {
           <CardHeader>
             <CardTitle>Calendar</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-48 items-center justify-center">
-            <div className="text-muted-foreground">Calendar Placeholder</div>
+          <CardContent className="p-2">
+            <Calendar mode="single" />
           </CardContent>
         </Card>
       </div>
