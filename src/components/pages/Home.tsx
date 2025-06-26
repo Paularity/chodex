@@ -9,7 +9,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { SimpleLineChart } from "@/components/ui/line-chart";
 import { SimpleBarChart } from "@/components/ui/bar-chart";
 import { useAuthStore } from "@/store/authStore";
-import { HomeIcon } from "lucide-react";
+import {
+  HomeIcon,
+  TrendingUp,
+  Activity,
+  Users,
+  DollarSign,
+  LineChart as LineChartIcon,
+  BarChart as BarChartIcon,
+  Table as TableIcon,
+  Calendar as CalendarIcon,
+} from "lucide-react";
 
 export default function HomePage() {
   const { user, username } = useAuthStore();
@@ -39,55 +49,69 @@ export default function HomePage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Statistic A</CardTitle>
-            <CardDescription>Placeholder value</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-sm font-medium">New Users</CardTitle>
+              <CardDescription>Last 30 days</CardDescription>
+            </div>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">123</div>
+            <div className="text-3xl font-bold text-center">123</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Statistic B</CardTitle>
-            <CardDescription>Placeholder value</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-sm font-medium">Sales</CardTitle>
+              <CardDescription>Past week</CardDescription>
+            </div>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">456</div>
+            <div className="text-3xl font-bold text-center">456</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Statistic C</CardTitle>
-            <CardDescription>Placeholder value</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+              <CardDescription>Currently</CardDescription>
+            </div>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">789</div>
+            <div className="text-3xl font-bold text-center">789</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Statistic D</CardTitle>
-            <CardDescription>Placeholder value</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div>
+              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+              <CardDescription>This month</CardDescription>
+            </div>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">101</div>
+            <div className="text-3xl font-bold text-center">101</div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="h-64">
-          <CardHeader>
-            <CardTitle>Graph</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Line Graph</CardTitle>
+            <LineChartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="h-full">
             <SimpleLineChart data={lineData} className="h-full" />
           </CardContent>
         </Card>
         <Card className="h-64">
-          <CardHeader>
-            <CardTitle>Chart</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Bar Chart</CardTitle>
+            <BarChartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="h-full">
             <SimpleBarChart data={barData} className="h-full" />
@@ -97,8 +121,9 @@ export default function HomePage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Mini Table</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mini Table</CardTitle>
+            <TableIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <table className="w-full text-sm border">
@@ -126,10 +151,11 @@ export default function HomePage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Calendar</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Calendar</CardTitle>
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-2">
+          <CardContent className="p-2 flex justify-center">
             <Calendar mode="single" />
           </CardContent>
         </Card>
