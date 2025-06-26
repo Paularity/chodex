@@ -46,7 +46,7 @@ export default function AuthenticatedLayout() {
           <Button
             size="icon"
             variant="ghost"
-            className="rounded-full"
+            className="rounded-full text-sidebar-foreground"
             onClick={() => setCollapsed((c) => !c)}
           >
             {collapsed ? (
@@ -93,7 +93,7 @@ export default function AuthenticatedLayout() {
           <Button
             size="icon"
             variant="ghost"
-            className="md:hidden"
+            className="md:hidden text-primary-foreground"
             onClick={() => setSidebarOpen((open) => !open)}
           >
             <Menu className="w-5 h-5" />
