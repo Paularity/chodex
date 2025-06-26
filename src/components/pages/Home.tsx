@@ -56,7 +56,7 @@ export default function HomePage() {
             </div>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="px-4">
+          <CardContent className="flex-1 px-4 flex items-center justify-center">
             <div className="text-3xl font-bold text-center">123</div>
           </CardContent>
         </Card>
@@ -68,7 +68,7 @@ export default function HomePage() {
             </div>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="px-4">
+          <CardContent className="flex-1 px-4 flex items-center justify-center">
             <div className="text-3xl font-bold text-center">456</div>
           </CardContent>
         </Card>
@@ -80,7 +80,7 @@ export default function HomePage() {
             </div>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="px-4">
+          <CardContent className="flex-1 px-4 flex items-center justify-center">
             <div className="text-3xl font-bold text-center">789</div>
           </CardContent>
         </Card>
@@ -92,7 +92,7 @@ export default function HomePage() {
             </div>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="px-4">
+          <CardContent className="flex-1 px-4 flex items-center justify-center">
             <div className="text-3xl font-bold text-center">101</div>
           </CardContent>
         </Card>
@@ -104,8 +104,8 @@ export default function HomePage() {
             <CardTitle className="text-sm font-medium">Line Graph</CardTitle>
             <LineChartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="h-full px-4">
-            <SimpleLineChart data={lineData} className="h-full" />
+          <CardContent className="flex-1 px-4">
+            <SimpleLineChart data={lineData} className="w-full h-full" />
           </CardContent>
         </Card>
         <Card className="h-64 p-4 gap-4">
@@ -113,8 +113,8 @@ export default function HomePage() {
             <CardTitle className="text-sm font-medium">Bar Chart</CardTitle>
             <BarChartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="h-full px-4">
-            <SimpleBarChart data={barData} className="h-full" />
+          <CardContent className="flex-1 px-4">
+            <SimpleBarChart data={barData} className="w-full h-full" />
           </CardContent>
         </Card>
       </div>
@@ -125,7 +125,7 @@ export default function HomePage() {
             <CardTitle className="text-sm font-medium">Mini Table</CardTitle>
             <TableIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="px-4">
+          <CardContent className="flex-1 px-4">
             <table className="w-full text-sm border">
               <thead className="bg-muted">
                 <tr>
@@ -155,7 +155,7 @@ export default function HomePage() {
             <CardTitle className="text-sm font-medium">Calendar</CardTitle>
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="p-2 flex justify-center">
+          <CardContent className="flex-1 p-2 flex justify-center">
             <Calendar mode="single" />
           </CardContent>
         </Card>
