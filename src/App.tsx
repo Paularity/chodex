@@ -1,7 +1,11 @@
 import { useAuthStore } from "@/store/authStore";
 import AuthenticatedLayout from "./components/layout/AuthenticatedLayout";
 import AuthPage from "./components/pages/Auth";
+import HomePage from "./components/pages/Home";
+import ProfilePage from "./components/pages/Profile";
+import SettingsPage from "./components/pages/Settings";
 import { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 export default function App() {
   useEffect(() => {
@@ -9,5 +13,18 @@ export default function App() {
   }, []);
 
   const { isAuthenticated, token } = useAuthStore();
-  return isAuthenticated && token ? <AuthenticatedLayout /> : <AuthPage />;
+  if (!isAuthenticated || !token) {
+    return <AuthPage />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<AuthenticatedLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Route>
+    </Routes>
+  );
 }
