@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings as SettingsIcon,
+  User,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -45,7 +46,7 @@ export default function AuthenticatedLayout() {
           <Button
             size="icon"
             variant="ghost"
-            className="hidden md:inline-flex"
+            className="rounded-full"
             onClick={() => setCollapsed((c) => !c)}
           >
             {collapsed ? (
@@ -102,8 +103,8 @@ export default function AuthenticatedLayout() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Avatar>
-                  <AvatarFallback>
-                    {(user || username || "U").slice(0, 2).toUpperCase()}
+                  <AvatarFallback className="p-1">
+                    <User className="w-4 h-4" />
                   </AvatarFallback>
                 </Avatar>
               </Button>
