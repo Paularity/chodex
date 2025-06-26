@@ -22,7 +22,7 @@ export function SimpleLineChart({ data, className }: LineChartProps) {
           <Line
             type="monotone"
             dataKey="value"
-            stroke="var(--chart-1)"
+            stroke="#4f46e5"
             strokeWidth={2}
             dot={false}
           />

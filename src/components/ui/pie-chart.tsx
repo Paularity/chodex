@@ -13,13 +13,7 @@ interface PieChartProps {
 }
 
 export function SimplePieChart({ data, className }: PieChartProps) {
-  const fallbackColors = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
-  ];
+  const fallbackColors = ["#4f46e5", "#22c55e", "#eab308", "#ec4899", "#0ea5e9"];
 
   return (
     <div className={cn("w-full h-full", className)}>
