@@ -48,84 +48,84 @@ export default function HomePage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="p-4 gap-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
               <CardTitle className="text-sm font-medium">New Users</CardTitle>
               <CardDescription>Last 30 days</CardDescription>
             </div>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4">
             <div className="text-3xl font-bold text-center">123</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="p-4 gap-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
               <CardTitle className="text-sm font-medium">Sales</CardTitle>
               <CardDescription>Past week</CardDescription>
             </div>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4">
             <div className="text-3xl font-bold text-center">456</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="p-4 gap-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
               <CardTitle className="text-sm font-medium">Active Users</CardTitle>
               <CardDescription>Currently</CardDescription>
             </div>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4">
             <div className="text-3xl font-bold text-center">789</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="p-4 gap-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
               <CardTitle className="text-sm font-medium">Revenue</CardTitle>
               <CardDescription>This month</CardDescription>
             </div>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4">
             <div className="text-3xl font-bold text-center">101</div>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="h-64">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="h-64 p-4 gap-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Line Graph</CardTitle>
             <LineChartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="h-full">
+          <CardContent className="h-full px-4">
             <SimpleLineChart data={lineData} className="h-full" />
           </CardContent>
         </Card>
-        <Card className="h-64">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="h-64 p-4 gap-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Bar Chart</CardTitle>
             <BarChartIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="h-full">
+          <CardContent className="h-full px-4">
             <SimpleBarChart data={barData} className="h-full" />
           </CardContent>
         </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="p-4 gap-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Mini Table</CardTitle>
             <TableIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4">
             <table className="w-full text-sm border">
               <thead className="bg-muted">
                 <tr>
@@ -150,8 +150,8 @@ export default function HomePage() {
             </table>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <Card className="p-4 gap-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Calendar</CardTitle>
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
