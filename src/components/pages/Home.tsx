@@ -8,6 +8,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { SimpleLineChart } from "@/components/ui/line-chart";
 import { SimpleBarChart } from "@/components/ui/bar-chart";
+import { SimplePieChart } from "@/components/ui/pie-chart";
 import { useAuthStore } from "@/store/authStore";
 import {
   HomeIcon,
@@ -15,8 +16,13 @@ import {
   Activity,
   Users,
   DollarSign,
+  Package,
+  LifeBuoy,
   LineChart as LineChartIcon,
   BarChart as BarChartIcon,
+  PieChart as PieChartIcon,
+  ListTodo,
+  CheckSquare,
   Table as TableIcon,
   Calendar as CalendarIcon,
 } from "lucide-react";
@@ -40,6 +46,18 @@ export default function HomePage() {
     { name: "E", value: 9 },
   ];
 
+  const pieData = [
+    { name: "Red", value: 10 },
+    { name: "Blue", value: 20 },
+    { name: "Green", value: 15 },
+  ];
+
+  const tasks = [
+    { id: 1, label: "Prepare report" },
+    { id: 2, label: "Email clients" },
+    { id: 3, label: "Team meeting" },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 text-2xl font-bold mb-4">
@@ -47,7 +65,7 @@ export default function HomePage() {
         Welcome, {user || username || "User"}!
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <Card className="gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
@@ -96,9 +114,33 @@ export default function HomePage() {
             <div className="text-3xl font-bold text-center">101</div>
           </CardContent>
         </Card>
+        <Card className="gap-4 py-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
+            <div>
+              <CardTitle className="text-sm font-medium">Orders</CardTitle>
+              <CardDescription>Today</CardDescription>
+            </div>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="flex-1 px-4 flex items-center justify-center">
+            <div className="text-3xl font-bold text-center">32</div>
+          </CardContent>
+        </Card>
+        <Card className="gap-4 py-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
+            <div>
+              <CardTitle className="text-sm font-medium">Support Tickets</CardTitle>
+              <CardDescription>Open</CardDescription>
+            </div>
+            <LifeBuoy className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="flex-1 px-4 flex items-center justify-center">
+            <div className="text-3xl font-bold text-center">5</div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card className="h-64 gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Line Graph</CardTitle>
@@ -117,9 +159,18 @@ export default function HomePage() {
             <SimpleBarChart data={barData} className="w-full h-full" />
           </CardContent>
         </Card>
+        <Card className="h-64 gap-4 py-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
+            <CardTitle className="text-sm font-medium">Pie Chart</CardTitle>
+            <PieChartIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="flex-1 px-4">
+            <SimplePieChart data={pieData} className="w-full h-full" />
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card className="gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Mini Table</CardTitle>
@@ -148,6 +199,22 @@ export default function HomePage() {
                 </tr>
               </tbody>
             </table>
+          </CardContent>
+        </Card>
+        <Card className="gap-4 py-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
+            <CardTitle className="text-sm font-medium">Tasks</CardTitle>
+            <ListTodo className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="flex-1 px-4">
+            <ul className="text-sm space-y-1">
+              {tasks.map((t) => (
+                <li key={t.id} className="flex items-center gap-2">
+                  <CheckSquare className="w-4 h-4 text-primary" />
+                  {t.label}
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
         <Card className="gap-4 py-4">
