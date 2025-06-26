@@ -19,7 +19,13 @@ export function SimpleLineChart({ data, className }: LineChartProps) {
           <XAxis dataKey="name" className="text-xs" tickLine={false} axisLine={false} />
           <YAxis className="text-xs" tickLine={false} axisLine={false} width={32} />
           <Tooltip wrapperClassName="text-xs" />
-          <Line type="monotone" dataKey="value" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={false} />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="var(--chart-1)"
+            strokeWidth={2}
+            dot={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

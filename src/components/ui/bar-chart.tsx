@@ -19,7 +19,7 @@ export function SimpleBarChart({ data, className }: BarChartProps) {
           <XAxis dataKey="name" className="text-xs" tickLine={false} axisLine={false} />
           <YAxis className="text-xs" tickLine={false} axisLine={false} width={32} />
           <Tooltip wrapperClassName="text-xs" />
-          <Bar dataKey="value" fill="hsl(var(--chart-2))" />
+          <Bar dataKey="value" fill="var(--chart-2)" />
         </BarChart>
       </ResponsiveContainer>
     </div>

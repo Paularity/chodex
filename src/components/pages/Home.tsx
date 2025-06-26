@@ -48,7 +48,7 @@ export default function HomePage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-4 gap-4">
+        <Card className="gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
               <CardTitle className="text-sm font-medium">New Users</CardTitle>
@@ -60,7 +60,7 @@ export default function HomePage() {
             <div className="text-3xl font-bold text-center">123</div>
           </CardContent>
         </Card>
-        <Card className="p-4 gap-4">
+        <Card className="gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
               <CardTitle className="text-sm font-medium">Sales</CardTitle>
@@ -72,7 +72,7 @@ export default function HomePage() {
             <div className="text-3xl font-bold text-center">456</div>
           </CardContent>
         </Card>
-        <Card className="p-4 gap-4">
+        <Card className="gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
               <CardTitle className="text-sm font-medium">Active Users</CardTitle>
@@ -84,7 +84,7 @@ export default function HomePage() {
             <div className="text-3xl font-bold text-center">789</div>
           </CardContent>
         </Card>
-        <Card className="p-4 gap-4">
+        <Card className="gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <div>
               <CardTitle className="text-sm font-medium">Revenue</CardTitle>
@@ -99,7 +99,7 @@ export default function HomePage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="h-64 p-4 gap-4">
+        <Card className="h-64 gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Line Graph</CardTitle>
             <LineChartIcon className="h-4 w-4 text-muted-foreground" />
@@ -108,7 +108,7 @@ export default function HomePage() {
             <SimpleLineChart data={lineData} className="w-full h-full" />
           </CardContent>
         </Card>
-        <Card className="h-64 p-4 gap-4">
+        <Card className="h-64 gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Bar Chart</CardTitle>
             <BarChartIcon className="h-4 w-4 text-muted-foreground" />
@@ -120,7 +120,7 @@ export default function HomePage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-4 gap-4">
+        <Card className="gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Mini Table</CardTitle>
             <TableIcon className="h-4 w-4 text-muted-foreground" />
@@ -150,7 +150,7 @@ export default function HomePage() {
             </table>
           </CardContent>
         </Card>
-        <Card className="p-4 gap-4">
+        <Card className="gap-4 py-4">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4">
             <CardTitle className="text-sm font-medium">Calendar</CardTitle>
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
