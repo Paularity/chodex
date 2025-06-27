@@ -18,7 +18,7 @@ export default function ApplicationTable({ applications }: Props) {
             <th className="p-2 text-left font-semibold">Code</th>
             <th className="p-2 text-left font-semibold">Base Path</th>
             <th className="p-2 text-left font-semibold">URL</th>
-            <th className="p-2 text-left font-semibold">Online</th>
+            <th className="p-2 text-left font-semibold">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -28,7 +28,14 @@ export default function ApplicationTable({ applications }: Props) {
               <td className="p-2">{app.code}</td>
               <td className="p-2">{app.basePath}</td>
               <td className="p-2">{app.url}</td>
-              <td className="p-2">{app.isOnline ? "Yes" : "No"}</td>
+              <td className="p-2">
+                <span
+                  className={
+                    "inline-block w-3 h-3 rounded-full " +
+                    (app.isOnline ? "bg-green-500" : "bg-red-500")
+                  }
+                />
+              </td>
             </tr>
           ))}
         </tbody>
