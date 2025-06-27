@@ -112,32 +112,26 @@ export default function AuthForm() {
       </div>
 
       {/* Tenant dropdown */}
-      <div className="relative w-full">
+      <div className="w-full space-y-3 my-[30px]">
         <label
           htmlFor="tenant"
-          className="absolute left-3 top-1 text-xs text-muted-foreground transition-all 
-      peer-placeholder-shown:top-[10px] 
-      peer-placeholder-shown:text-sm 
-      peer-placeholder-shown:text-gray-400 
-      peer-focus:top-1 
-      peer-focus:text-xs 
-      peer-focus:text-blue-500"
+          className="block text-sm font-medium text-muted-foreground mb-1 text-left"
         >
           Tenant
         </label>
 
         <Select value={tenantId} onValueChange={setTenantId}>
-          <SelectTrigger id="tenant" className="peer">
-            <SelectValue placeholder=" " />
+          <SelectTrigger id="tenant" className="w-full h-[44px] border border-input rounded-md px-3 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <SelectValue placeholder="Select a tenant" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={DEFAULT_TENANT_ID}>Test Tenant</SelectItem>
-            <SelectItem value={DEFAULT_FAILED_TENANT_ID}>
-              Failed Tenant
-            </SelectItem>
+            <SelectItem value={DEFAULT_FAILED_TENANT_ID}>Failed Tenant</SelectItem>
           </SelectContent>
         </Select>
       </div>
+
+
 
       {/* Login button */}
       <Button
