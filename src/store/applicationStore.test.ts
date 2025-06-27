@@ -22,6 +22,7 @@ vi.mock('@/lib/api/application/service', () => ({
         },
       ],
     }),
+    refresh: vi.fn().mockResolvedValue({ data: null }),
   },
 }));
 
@@ -52,6 +53,14 @@ describe('useApplicationStore', () => {
 
   it('fetchApplications retrieves data', async () => {
     await useApplicationStore.getState().fetchApplications();
+    expect(ApplicationService.list).toHaveBeenCalledWith('tok', 'tenant1');
+    expect(useApplicationStore.getState().applications.length).toBe(1);
+    expect(useApplicationStore.getState().loading).toBe(false);
+  });
+
+  it('refreshApplications refreshes and lists data', async () => {
+    await useApplicationStore.getState().refreshApplications();
+    expect(ApplicationService.refresh).toHaveBeenCalledWith('tok', 'tenant1');
     expect(ApplicationService.list).toHaveBeenCalledWith('tok', 'tenant1');
     expect(useApplicationStore.getState().applications.length).toBe(1);
     expect(useApplicationStore.getState().loading).toBe(false);

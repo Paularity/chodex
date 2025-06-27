@@ -8,6 +8,7 @@ interface ApplicationState {
   loading: boolean;
   setApplications: (apps: Application[]) => void;
   fetchApplications: () => Promise<void>;
+  refreshApplications: () => Promise<void>;
 }
 
 export const useApplicationStore = create<ApplicationState>((set) => ({
@@ -18,6 +19,17 @@ export const useApplicationStore = create<ApplicationState>((set) => ({
     set({ loading: true });
     try {
       const { token, tenantId } = useAuthStore.getState();
+      const res = await ApplicationService.list(token, tenantId);
+      set({ applications: res.data });
+    } finally {
+      set({ loading: false });
+    }
+  },
+  refreshApplications: async () => {
+    set({ loading: true });
+    try {
+      const { token, tenantId } = useAuthStore.getState();
+      await ApplicationService.refresh(token, tenantId);
       const res = await ApplicationService.list(token, tenantId);
       set({ applications: res.data });
     } finally {
