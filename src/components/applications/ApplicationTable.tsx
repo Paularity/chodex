@@ -1,6 +1,6 @@
 import type { Application } from "@/lib/api/models/application.model";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2, X } from "lucide-react";
 
 interface Props {
   applications: Application[];
@@ -52,16 +52,15 @@ export default function ApplicationTable({ applications, loading }: Props) {
               <td className="p-2">{new Date(app.lastChecked).toLocaleString()}</td>
               <td className="p-2 text-center">
                 {loading ? (
-                  <Loader2 className="w-3 h-3 animate-spin mx-auto text-muted-foreground" />
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto text-muted-foreground" />
                 ) : (
                   <Tooltip>
                     <TooltipTrigger>
-                      <span
-                        className={
-                          "inline-block w-3 h-3 rounded-full " +
-                          (app.isOnline ? "bg-green-500" : "bg-red-500")
-                        }
-                      />
+                      {app.isOnline ? (
+                        <Check className="w-4 h-4 text-green-500 mx-auto" />
+                      ) : (
+                        <X className="w-4 h-4 text-red-500 mx-auto" />
+                      )}
                     </TooltipTrigger>
                     <TooltipContent>
                       {app.isOnline ? "Online" : "Offline"}
