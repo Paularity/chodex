@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { ApplicationService } from "@/lib/api/application/service";
 import type { Application } from "@/lib/api/models/application.model";
+import { useAuthStore } from "./authStore";
 
 interface ApplicationState {
   applications: Application[];
@@ -16,7 +17,8 @@ export const useApplicationStore = create<ApplicationState>((set) => ({
   fetchApplications: async () => {
     set({ loading: true });
     try {
-      const res = await ApplicationService.list();
+      const { token, tenantId } = useAuthStore.getState();
+      const res = await ApplicationService.list(token, tenantId);
       set({ applications: res.data });
     } finally {
       set({ loading: false });

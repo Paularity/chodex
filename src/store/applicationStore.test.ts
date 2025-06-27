@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useApplicationStore } from './applicationStore';
+import { useAuthStore } from './authStore';
 import { ApplicationService } from '@/lib/api/application/service';
 
 vi.mock('@/lib/api/application/service', () => ({
@@ -41,6 +42,7 @@ const sample = {
 describe('useApplicationStore', () => {
   beforeEach(() => {
     useApplicationStore.setState({ applications: [], loading: false });
+    useAuthStore.setState({ token: 'tok', tenantId: 'tenant1' });
   });
 
   it('sets applications', () => {
@@ -50,6 +52,7 @@ describe('useApplicationStore', () => {
 
   it('fetchApplications retrieves data', async () => {
     await useApplicationStore.getState().fetchApplications();
+    expect(ApplicationService.list).toHaveBeenCalledWith('tok', 'tenant1');
     expect(useApplicationStore.getState().applications.length).toBe(1);
     expect(useApplicationStore.getState().loading).toBe(false);
   });
