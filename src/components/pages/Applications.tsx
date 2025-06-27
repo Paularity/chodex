@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState, useMemo } from "react";
 import { useApplicationStore } from "@/store/applicationStore";
 import { useAuthStore } from "@/store/authStore";
 import ApplicationTable from "../applications/ApplicationTable";
@@ -10,12 +10,50 @@ import {
   CardAction,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Package, RefreshCw, Loader2 } from "lucide-react";
 import { ApplicationService } from "@/lib/api/application/service";
 
 export default function ApplicationsPage() {
   const { applications, loading, fetchApplications, setLoading } = useApplicationStore();
   const { token, tenantId } = useAuthStore();
+
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<"all" | "online" | "offline">("all");
+  const [sort, setSort] = useState<"name:asc" | "name:desc" | "code:asc" | "code:desc" | "lastChecked:asc" | "lastChecked:desc">("name:asc");
+
+  const visibleApps = useMemo(() => {
+    const term = search.toLowerCase();
+    const [field, dir] = sort.split(":") as ["name" | "code" | "lastChecked", "asc" | "desc"];
+
+    return [...applications]
+      .filter((a) =>
+        term
+          ? a.name.toLowerCase().includes(term) || a.code.toLowerCase().includes(term)
+          : true
+      )
+      .filter((a) =>
+        status === "all" ? true : status === "online" ? a.isOnline : !a.isOnline
+      )
+      .sort((a, b) => {
+        let va: string | number = (a as any)[field];
+        let vb: string | number = (b as any)[field];
+        if (field === "lastChecked") {
+          va = new Date(va).getTime();
+          vb = new Date(vb).getTime();
+        }
+        if (va < vb) return dir === "asc" ? -1 : 1;
+        if (va > vb) return dir === "asc" ? 1 : -1;
+        return 0;
+      });
+  }, [applications, search, status, sort]);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -51,8 +89,39 @@ export default function ApplicationsPage() {
           </CardAction>
         </CardHeader>
         <CardContent>
+          <div className="flex flex-col md:flex-row gap-2 mb-4">
+            <Input
+              placeholder="Search by name or code"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="md:w-1/3"
+            />
+            <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+              <SelectTrigger className="md:w-32">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="offline">Offline</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sort} onValueChange={(v) => setSort(v as any)}>
+              <SelectTrigger className="md:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name:asc">Name ↑</SelectItem>
+                <SelectItem value="name:desc">Name ↓</SelectItem>
+                <SelectItem value="code:asc">Code ↑</SelectItem>
+                <SelectItem value="code:desc">Code ↓</SelectItem>
+                <SelectItem value="lastChecked:asc">Last Checked ↑</SelectItem>
+                <SelectItem value="lastChecked:desc">Last Checked ↓</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="relative">
-            <ApplicationTable applications={applications} loading={loading} />
+            <ApplicationTable applications={visibleApps} loading={loading} />
             {loading && applications.length > 0 && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/70">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
