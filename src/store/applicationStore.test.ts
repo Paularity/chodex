@@ -56,4 +56,9 @@ describe('useApplicationStore', () => {
     expect(useApplicationStore.getState().applications.length).toBe(1);
     expect(useApplicationStore.getState().loading).toBe(false);
   });
+
+  it('setLoading updates loading state', () => {
+    useApplicationStore.getState().setLoading(true);
+    expect(useApplicationStore.getState().loading).toBe(true);
+  });
 });

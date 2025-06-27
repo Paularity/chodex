@@ -14,13 +14,18 @@ import { Package, RefreshCw, Loader2 } from "lucide-react";
 import { ApplicationService } from "@/lib/api/application/service";
 
 export default function ApplicationsPage() {
-  const { applications, loading, fetchApplications } = useApplicationStore();
+  const { applications, loading, fetchApplications, setLoading } = useApplicationStore();
   const { token, tenantId } = useAuthStore();
 
   const refresh = useCallback(async () => {
-    await ApplicationService.refresh(token, tenantId);
-    await fetchApplications();
-  }, [token, tenantId, fetchApplications]);
+    setLoading(true);
+    try {
+      await ApplicationService.refresh(token, tenantId);
+      await fetchApplications();
+    } finally {
+      setLoading(false);
+    }
+  }, [token, tenantId, fetchApplications, setLoading]);
 
   useEffect(() => {
     const load = async () => {
