@@ -18,7 +18,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Package, RefreshCw, Loader2 } from "lucide-react";
+import { Package, RefreshCw } from "lucide-react";
 import { ApplicationService } from "@/lib/api/application/service";
 
 export default function ApplicationsPage() {
@@ -122,11 +122,6 @@ export default function ApplicationsPage() {
           </div>
           <div className="relative">
             <ApplicationTable applications={visibleApps} loading={loading} />
-            {loading && applications.length > 0 && (
-              <div className="absolute inset-0 flex items-center justify-center bg-background/70">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
