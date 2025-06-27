@@ -43,7 +43,7 @@ export default function AuthenticatedLayout() {
         )}
       >
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xl font-bold">Chodex</span>
+          <span className="text-xl font-bold">{collapsed ? 'C' : 'Chodex'}</span>
           <Button
             size="icon"
             variant="outline"
