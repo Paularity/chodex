@@ -4,6 +4,7 @@ import AuthPage from "./components/pages/Auth";
 import HomePage from "./components/pages/Home";
 import ProfilePage from "./components/pages/Profile";
 import SettingsPage from "./components/pages/Settings";
+import ApplicationsPage from "./components/pages/Applications";
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -23,6 +24,7 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="applications" element={<ApplicationsPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Route>
     </Routes>
