@@ -1,15 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useApplicationStore } from "@/store/applicationStore";
+import { useAuthStore } from "@/store/authStore";
 import ApplicationTable from "../applications/ApplicationTable";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardAction,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Package, RefreshCw } from "lucide-react";
+import { ApplicationService } from "@/lib/api/application/service";
 
 export default function ApplicationsPage() {
   const { applications, loading, fetchApplications } = useApplicationStore();
+  const { token, tenantId } = useAuthStore();
+
+  const refresh = useCallback(async () => {
+    await ApplicationService.refresh(token, tenantId);
+    await fetchApplications();
+  }, [token, tenantId, fetchApplications]);
 
   useEffect(() => {
-    fetchApplications();
-  }, [fetchApplications]);
+    refresh();
+  }, [refresh]);
 
   return (
     <div className="space-y-4">
@@ -18,11 +33,16 @@ export default function ApplicationsPage() {
         Applications
       </div>
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle>Registered Applications</CardTitle>
+          <CardAction>
+            <Button size="icon" variant="outline" onClick={refresh}>
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </CardAction>
         </CardHeader>
         <CardContent>
-          {loading ? <p>Loading...</p> : <ApplicationTable applications={applications} />}
+          <ApplicationTable applications={applications} loading={loading} />
         </CardContent>
       </Card>
     </div>
