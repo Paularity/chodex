@@ -7,6 +7,7 @@ interface ApplicationState {
   applications: Application[];
   loading: boolean;
   setApplications: (apps: Application[]) => void;
+  setLoading: (loading: boolean) => void;
   fetchApplications: () => Promise<void>;
 }
 
@@ -14,6 +15,7 @@ export const useApplicationStore = create<ApplicationState>((set) => ({
   applications: [],
   loading: false,
   setApplications: (apps) => set({ applications: apps }),
+  setLoading: (loading) => set({ loading }),
   fetchApplications: async () => {
     set({ loading: true });
     try {

@@ -1,13 +1,21 @@
 import type { Application } from "@/lib/api/models/application.model";
-import {Tooltip, TooltipContent, TooltipTrigger} from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { Check, Loader2, X } from "lucide-react";
 
 interface Props {
   applications: Application[];
+  loading: boolean;
 }
 
-export default function ApplicationTable({ applications }: Props) {
+export default function ApplicationTable({ applications, loading }: Props) {
   if (!applications.length) {
-    return <p>No applications found.</p>;
+    return loading ? (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    ) : (
+      <p>No applications found.</p>
+    );
   }
 
   return (
@@ -43,19 +51,22 @@ export default function ApplicationTable({ applications }: Props) {
               </td>
               <td className="p-2">{new Date(app.lastChecked).toLocaleString()}</td>
               <td className="p-2 text-center">
-                <Tooltip>
-                  <TooltipTrigger>
-            <span
-                className={
-                    "inline-block w-3 h-3 rounded-full " +
-                    (app.isOnline ? "bg-green-500" : "bg-red-500")
-                }
-            />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {app.isOnline ? "Online" : "Offline"}
-                  </TooltipContent>
-                </Tooltip>
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto text-muted-foreground" />
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      {app.isOnline ? (
+                        <Check className="w-4 h-4 text-green-500 mx-auto" />
+                      ) : (
+                        <X className="w-4 h-4 text-red-500 mx-auto" />
+                      )}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {app.isOnline ? "Online" : "Offline"}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </td>
             </tr>
         ))}
