@@ -1,28 +1,45 @@
 import type { FileItem } from "@/lib/api/models/file.model";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface Props {
   files: FileItem[];
   onSelect: (file: FileItem) => void;
   selectedId?: string;
+  loading?: boolean;
 }
 
-export default function FileExplorer({ files, onSelect, selectedId }: Props) {
-  if (!files.length) {
-    return <p>No files found.</p>;
-  }
-
+export default function FileExplorer({ files, onSelect, selectedId, loading }: Props) {
   return (
-    <ul className="space-y-1">
-      {files.map((f) => (
-        <li
-          key={f.id}
-          onClick={() => onSelect(f)}
-          className={`p-1 cursor-pointer rounded ${selectedId === f.id ? "bg-accent" : "hover:bg-muted"}`}
-        >
-          {f.name}
-        </li>
-      ))}
-    </ul>
+    <Card className="h-full">
+      <CardHeader className="pb-2">
+        <CardTitle>Explorer</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {loading ? (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+          </div>
+        ) : files.length ? (
+          <ul className="space-y-1">
+            {files.map((f) => (
+              <li key={f.id}>
+                <Button
+                  variant={selectedId === f.id ? "secondary" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => onSelect(f)}
+                >
+                  {f.name}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="p-2 text-muted-foreground">No files found.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

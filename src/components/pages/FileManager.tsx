@@ -19,16 +19,13 @@ export default function FileManagerPage() {
         <Folder className="w-6 h-6" /> Files
       </div>
       <div className="grid md:grid-cols-3 gap-4">
-        <div className="border rounded p-2 overflow-auto">
-          {loading ? <p>Loading...</p> : (
-            <FileExplorer
-              files={files}
-              onSelect={setSelected}
-              selectedId={selected?.id}
-            />
-          )}
-        </div>
-        <div className="md:col-span-2 border rounded p-2 overflow-auto">
+        <FileExplorer
+          files={files}
+          loading={loading}
+          onSelect={setSelected}
+          selectedId={selected?.id}
+        />
+        <div className="md:col-span-2">
           <FileViewer file={selected} />
         </div>
       </div>
