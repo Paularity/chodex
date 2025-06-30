@@ -127,7 +127,12 @@ export default function ApplicationsPage() {
           </CardAction>
         </CardHeader>
         <CardContent>
-          <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+          <Dialog
+            open={!!editing}
+            onOpenChange={(open: boolean) => {
+              if (!open) setEditing(null)
+            }}
+          >
             <DialogContent>
               {editing && (
                 <>
