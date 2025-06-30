@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Settings as SettingsIcon,
   Package,
+  Folder,
   User,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -84,6 +85,20 @@ export default function AuthenticatedLayout() {
         >
           <Package className="w-4 h-4" />
           {!collapsed && <span>Applications</span>}
+        </NavLink>
+        <NavLink
+          to="/files"
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-2 rounded-md p-2 text-sm hover:bg-accent",
+              collapsed ? "justify-center" : "",
+              isActive && "bg-accent"
+            )
+          }
+          onClick={() => setSidebarOpen(false)}
+        >
+          <Folder className="w-4 h-4" />
+          {!collapsed && <span>Files</span>}
         </NavLink>
         <NavLink
           to="/settings"
