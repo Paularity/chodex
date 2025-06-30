@@ -5,6 +5,12 @@ import ApplicationTable from "../applications/ApplicationTable";
 import ApplicationForm from "../applications/ApplicationForm";
 import type { ApplicationFormData } from "../applications/ApplicationForm";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -94,19 +100,25 @@ export default function ApplicationsPage() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle>Registered Applications</CardTitle>
           <CardAction>
-            <Button size="icon" variant="outline" onClick={() => setEditing({
-              id: crypto.randomUUID(),
-              name: "",
-              code: "",
-              basePath: "",
-              url: "",
-              description: "",
-              isOnline: false,
-              lastChecked: new Date().toISOString(),
-              version: null,
-              tags: null,
-              owner: null,
-            })}>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() =>
+                setEditing({
+                  id: crypto.randomUUID(),
+                  name: "",
+                  code: "",
+                  basePath: "",
+                  url: "",
+                  description: "",
+                  isOnline: false,
+                  lastChecked: new Date().toISOString(),
+                  version: null,
+                  tags: null,
+                  owner: null,
+                })
+              }
+            >
               <Plus className="w-4 h-4" />
             </Button>
             <Button size="icon" variant="outline" onClick={refresh} disabled={loading}>
@@ -115,22 +127,31 @@ export default function ApplicationsPage() {
           </CardAction>
         </CardHeader>
         <CardContent>
-          {editing && (
-            <div className="mb-4">
-              <ApplicationForm
-                defaultValues={editing}
-                onSubmit={async (data) => {
-                  if (applications.find((a) => a.id === data.id)) {
-                    await updateApplication(data);
-                  } else {
-                    await createApplication(data);
-                  }
-                  setEditing(null);
-                }}
-                submitLabel={applications.find((a) => a.id === editing.id) ? "Update" : "Create"}
-              />
-            </div>
-          )}
+          <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+            <DialogContent>
+              {editing && (
+                <>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {applications.find((a) => a.id === editing.id) ? "Edit Application" : "Create Application"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <ApplicationForm
+                    defaultValues={editing}
+                    onSubmit={async (data) => {
+                      if (applications.find((a) => a.id === data.id)) {
+                        await updateApplication(data);
+                      } else {
+                        await createApplication(data);
+                      }
+                      setEditing(null);
+                    }}
+                    submitLabel={applications.find((a) => a.id === editing.id) ? "Update" : "Create"}
+                  />
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
           <div className="flex flex-col md:flex-row gap-2 mb-4">
             <Input
               placeholder="Search by name or code"
@@ -166,7 +187,21 @@ export default function ApplicationsPage() {
             <ApplicationTable
               applications={visibleApps}
               loading={loading}
-              onEdit={(app) => setEditing(app)}
+              onEdit={(app) =>
+                setEditing({
+                  id: app.id,
+                  name: app.name,
+                  code: app.code,
+                  basePath: app.basePath,
+                  url: app.url,
+                  description: app.description,
+                  isOnline: app.isOnline,
+                  lastChecked: app.lastChecked,
+                  version: app.version,
+                  tags: app.tags,
+                  owner: app.owner,
+                })
+              }
               onDelete={(app) => deleteApplication(app.id)}
             />
           </div>
