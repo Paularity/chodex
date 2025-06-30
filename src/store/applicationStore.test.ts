@@ -2,6 +2,21 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useApplicationStore } from './applicationStore';
 import { useAuthStore } from './authStore';
 import { ApplicationService } from '@/lib/api/application/service';
+import type { ApplicationSaveRequest } from '@/lib/api';
+
+const sample: ApplicationSaveRequest = {
+  id: '2',
+  name: 'Another',
+  code: 'another',
+  basePath: '/another',
+  url: 'http://another',
+  description: '',
+  isOnline: true,
+  lastChecked: '',
+  version: null,
+  tags: null,
+  owner: null,
+};
 
 vi.mock('@/lib/api/application/service', () => ({
   ApplicationService: {
@@ -22,22 +37,12 @@ vi.mock('@/lib/api/application/service', () => ({
         },
       ],
     }),
+    create: vi.fn().mockResolvedValue({ data: sample }),
+    update: vi.fn().mockResolvedValue({ data: sample }),
+    delete: vi.fn().mockResolvedValue({ data: null }),
   },
 }));
 
-const sample = {
-  id: '2',
-  name: 'Another',
-  code: 'another',
-  basePath: '/another',
-  url: 'http://another',
-  description: '',
-  isOnline: true,
-  lastChecked: '',
-  version: null,
-  tags: null,
-  owner: null,
-};
 
 describe('useApplicationStore', () => {
   beforeEach(() => {
@@ -60,5 +65,23 @@ describe('useApplicationStore', () => {
   it('setLoading updates loading state', () => {
     useApplicationStore.getState().setLoading(true);
     expect(useApplicationStore.getState().loading).toBe(true);
+  });
+
+  it('createApplication posts data and refreshes list', async () => {
+    await useApplicationStore.getState().createApplication(sample);
+    expect(ApplicationService.create).toHaveBeenCalledWith(sample, 'tok', 'tenant1');
+    expect(ApplicationService.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('updateApplication puts data and refreshes list', async () => {
+    await useApplicationStore.getState().updateApplication(sample);
+    expect(ApplicationService.update).toHaveBeenCalledWith(sample.id, sample, 'tok', 'tenant1');
+    expect(ApplicationService.list).toHaveBeenCalledTimes(3);
+  });
+
+  it('deleteApplication deletes and refreshes list', async () => {
+    await useApplicationStore.getState().deleteApplication('2');
+    expect(ApplicationService.delete).toHaveBeenCalledWith('2', 'tok', 'tenant1');
+    expect(ApplicationService.list).toHaveBeenCalledTimes(4);
   });
 });
