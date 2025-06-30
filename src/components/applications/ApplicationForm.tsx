@@ -27,9 +27,10 @@ interface Props {
   onSubmit: (data: ApplicationFormData) => void;
   submitLabel?: string;
   loading?: boolean;
+  onCancel?: () => void;
 }
 
-export default function ApplicationForm({ defaultValues, onSubmit, submitLabel = "Save", loading = false }: Props) {
+export default function ApplicationForm({ defaultValues, onSubmit, submitLabel = "Save", loading = false, onCancel }: Props) {
   const form = useForm<ApplicationFormData>({
     resolver: zodResolver(schema),
     defaultValues,
@@ -106,7 +107,12 @@ export default function ApplicationForm({ defaultValues, onSubmit, submitLabel =
             </FormItem>
           )}
         />
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {onCancel && (
+            <Button type="button" variant="ghost" onClick={onCancel} disabled={loading}>
+              Cancel
+            </Button>
+          )}
           <Button type="submit" disabled={loading} className="flex items-center gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {submitLabel}

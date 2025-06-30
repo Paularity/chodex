@@ -4,6 +4,8 @@ import { useAuthStore } from "@/store/authStore";
 import ApplicationTable from "../applications/ApplicationTable";
 import ApplicationForm from "../applications/ApplicationForm";
 import type { ApplicationFormData } from "../applications/ApplicationForm";
+import type { Application } from "@/lib/api/models/application.model";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +28,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Package, RefreshCw, Plus } from "lucide-react";
+import { Package, RefreshCw, Plus, Loader2 } from "lucide-react";
 import { ApplicationService } from "@/lib/api/application/service";
 
 export default function ApplicationsPage() {
@@ -47,6 +49,7 @@ export default function ApplicationsPage() {
   const [editing, setEditing] = useState<ApplicationFormData | null>(null);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Application | null>(null);
 
   const visibleApps = useMemo(() => {
     const term = search.toLowerCase();
@@ -150,8 +153,10 @@ export default function ApplicationsPage() {
                       try {
                         if (applications.find((a) => a.id === data.id)) {
                           await updateApplication(data);
+                          toast.success("Application updated");
                         } else {
                           await createApplication(data);
+                          toast.success("Application created");
                         }
                         setEditing(null);
                       } finally {
@@ -160,7 +165,53 @@ export default function ApplicationsPage() {
                     }}
                     loading={saving}
                     submitLabel={applications.find((a) => a.id === editing.id) ? "Update" : "Create"}
+                    onCancel={() => setEditing(null)}
                   />
+                </>
+              )}
+            </DialogContent>
+          </Dialog>
+          <Dialog
+            open={!!confirmDelete}
+            onOpenChange={(open: boolean) => {
+              if (!open) setConfirmDelete(null)
+            }}
+          >
+            <DialogContent>
+              {confirmDelete && (
+                <>
+                  <DialogHeader>
+                    <DialogTitle>Delete Application</DialogTitle>
+                  </DialogHeader>
+                  <p>Are you sure you want to delete "{confirmDelete.name}"?</p>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setConfirmDelete(null)}
+                      disabled={deletingId !== null}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={async () => {
+                        if (!confirmDelete) return
+                        setDeletingId(confirmDelete.id)
+                        try {
+                          await deleteApplication(confirmDelete.id)
+                          toast.success("Application deleted")
+                          setConfirmDelete(null)
+                        } finally {
+                          setDeletingId(null)
+                        }
+                      }}
+                      disabled={deletingId !== null}
+                      className="flex items-center gap-2"
+                    >
+                      {deletingId !== null && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Delete
+                    </Button>
+                  </div>
                 </>
               )}
             </DialogContent>
@@ -215,13 +266,8 @@ export default function ApplicationsPage() {
                   owner: app.owner,
                 })
               }
-              onDelete={async (app) => {
-                setDeletingId(app.id);
-                try {
-                  await deleteApplication(app.id);
-                } finally {
-                  setDeletingId(null);
-                }
+              onDelete={(app) => {
+                setConfirmDelete(app);
               }}
               deletingId={deletingId}
             />
