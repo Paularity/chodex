@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 interface ActionProps {
   onEdit: (app: Application) => void;
   onDelete: (app: Application) => void;
+  deletingId?: string | null;
 }
 
 interface Props extends ActionProps {
@@ -13,7 +14,7 @@ interface Props extends ActionProps {
   loading: boolean;
 }
 
-export default function ApplicationTable({ applications, loading, onEdit, onDelete }: Props) {
+export default function ApplicationTable({ applications, loading, onEdit, onDelete, deletingId }: Props) {
   if (!applications.length) {
     return loading ? (
       <div className="flex items-center justify-center py-8">
@@ -76,11 +77,15 @@ export default function ApplicationTable({ applications, loading, onEdit, onDele
                 )}
               </td>
               <td className="p-2 text-center space-x-1 whitespace-nowrap">
-                <Button size="icon" variant="ghost" onClick={() => onEdit(app)}>
+                <Button size="icon" variant="ghost" onClick={() => onEdit(app)} disabled={!!deletingId}>
                   <Pencil className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => onDelete(app)}>
-                  <Trash className="w-4 h-4" />
+                <Button size="icon" variant="ghost" onClick={() => onDelete(app)} disabled={deletingId === app.id}>
+                  {deletingId === app.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash className="w-4 h-4" />
+                  )}
                 </Button>
               </td>
             </tr>

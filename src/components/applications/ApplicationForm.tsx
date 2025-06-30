@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Application } from "@/lib/api/models/application.model";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
@@ -26,9 +26,10 @@ interface Props {
   defaultValues: ApplicationFormData;
   onSubmit: (data: ApplicationFormData) => void;
   submitLabel?: string;
+  loading?: boolean;
 }
 
-export default function ApplicationForm({ defaultValues, onSubmit, submitLabel = "Save" }: Props) {
+export default function ApplicationForm({ defaultValues, onSubmit, submitLabel = "Save", loading = false }: Props) {
   const form = useForm<ApplicationFormData>({
     resolver: zodResolver(schema),
     defaultValues,
@@ -106,7 +107,10 @@ export default function ApplicationForm({ defaultValues, onSubmit, submitLabel =
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit">{submitLabel}</Button>
+          <Button type="submit" disabled={loading} className="flex items-center gap-2">
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {submitLabel}
+          </Button>
         </div>
       </form>
     </Form>

@@ -45,6 +45,8 @@ export default function ApplicationsPage() {
   const [status, setStatus] = useState<"all" | "online" | "offline">("all");
   const [sort, setSort] = useState<"name:asc" | "name:desc" | "code:asc" | "code:desc" | "lastChecked:asc" | "lastChecked:desc">("name:asc");
   const [editing, setEditing] = useState<ApplicationFormData | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const visibleApps = useMemo(() => {
     const term = search.toLowerCase();
@@ -144,13 +146,19 @@ export default function ApplicationsPage() {
                   <ApplicationForm
                     defaultValues={editing}
                     onSubmit={async (data) => {
-                      if (applications.find((a) => a.id === data.id)) {
-                        await updateApplication(data);
-                      } else {
-                        await createApplication(data);
+                      setSaving(true);
+                      try {
+                        if (applications.find((a) => a.id === data.id)) {
+                          await updateApplication(data);
+                        } else {
+                          await createApplication(data);
+                        }
+                        setEditing(null);
+                      } finally {
+                        setSaving(false);
                       }
-                      setEditing(null);
                     }}
+                    loading={saving}
                     submitLabel={applications.find((a) => a.id === editing.id) ? "Update" : "Create"}
                   />
                 </>
@@ -207,7 +215,15 @@ export default function ApplicationsPage() {
                   owner: app.owner,
                 })
               }
-              onDelete={(app) => deleteApplication(app.id)}
+              onDelete={async (app) => {
+                setDeletingId(app.id);
+                try {
+                  await deleteApplication(app.id);
+                } finally {
+                  setDeletingId(null);
+                }
+              }}
+              deletingId={deletingId}
             />
           </div>
         </CardContent>
