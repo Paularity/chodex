@@ -2,8 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useApplicationStore } from './applicationStore';
 import { useAuthStore } from './authStore';
 import { ApplicationService } from '@/lib/api/application/service';
+import type { ApplicationSaveRequest } from '@/lib/api';
 
-const sample = {
+const sample: ApplicationSaveRequest = {
   id: '2',
   name: 'Another',
   code: 'another',
@@ -67,13 +68,13 @@ describe('useApplicationStore', () => {
   });
 
   it('createApplication posts data and refreshes list', async () => {
-    await useApplicationStore.getState().createApplication(sample as any);
+    await useApplicationStore.getState().createApplication(sample);
     expect(ApplicationService.create).toHaveBeenCalledWith(sample, 'tok', 'tenant1');
     expect(ApplicationService.list).toHaveBeenCalledTimes(2);
   });
 
   it('updateApplication puts data and refreshes list', async () => {
-    await useApplicationStore.getState().updateApplication(sample as any);
+    await useApplicationStore.getState().updateApplication(sample);
     expect(ApplicationService.update).toHaveBeenCalledWith(sample.id, sample, 'tok', 'tenant1');
     expect(ApplicationService.list).toHaveBeenCalledTimes(3);
   });

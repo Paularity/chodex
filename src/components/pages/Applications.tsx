@@ -2,7 +2,8 @@ import { useEffect, useCallback, useState, useMemo } from "react";
 import { useApplicationStore } from "@/store/applicationStore";
 import { useAuthStore } from "@/store/authStore";
 import ApplicationTable from "../applications/ApplicationTable";
-import ApplicationForm, { ApplicationFormData } from "../applications/ApplicationForm";
+import ApplicationForm from "../applications/ApplicationForm";
+import type { ApplicationFormData } from "../applications/ApplicationForm";
 import {
   Card,
   CardContent,
