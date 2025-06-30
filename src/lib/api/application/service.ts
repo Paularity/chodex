@@ -3,7 +3,7 @@ import { ApplicationEndpoints } from "./endpoints";
 import { createAuthConfig } from "../helpers";
 import type { ApiResponse } from "../models/api-response.model";
 import type { Application } from "../models/application.model";
-import type { ApplicationCreateRequest } from "../models/application-create-request.model";
+import type { ApplicationSaveRequest } from "../models/application-save-request.model";
 
 export const ApplicationService = {
   list: async (
@@ -18,12 +18,26 @@ export const ApplicationService = {
   },
 
   create: async (
-    data: ApplicationCreateRequest,
+    data: ApplicationSaveRequest,
     token: string,
     tenantId: string
   ): Promise<ApiResponse<Application>> => {
     const response = await axios.post(
       ApplicationEndpoints.create,
+      data,
+      createAuthConfig(token, tenantId)
+    );
+    return response.data;
+  },
+
+  update: async (
+    id: string,
+    data: ApplicationSaveRequest,
+    token: string,
+    tenantId: string
+  ): Promise<ApiResponse<Application>> => {
+    const response = await axios.put(
+      ApplicationEndpoints.update(id),
       data,
       createAuthConfig(token, tenantId)
     );

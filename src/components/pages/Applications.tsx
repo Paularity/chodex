@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState, useMemo } from "react";
 import { useApplicationStore } from "@/store/applicationStore";
 import { useAuthStore } from "@/store/authStore";
 import ApplicationTable from "../applications/ApplicationTable";
+import ApplicationForm, { ApplicationFormData } from "../applications/ApplicationForm";
 import {
   Card,
   CardContent,
@@ -18,16 +19,25 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Package, RefreshCw } from "lucide-react";
+import { Package, RefreshCw, Plus } from "lucide-react";
 import { ApplicationService } from "@/lib/api/application/service";
 
 export default function ApplicationsPage() {
-  const { applications, loading, fetchApplications, setLoading } = useApplicationStore();
+  const {
+    applications,
+    loading,
+    fetchApplications,
+    setLoading,
+    createApplication,
+    updateApplication,
+    deleteApplication,
+  } = useApplicationStore();
   const { token, tenantId } = useAuthStore();
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "online" | "offline">("all");
   const [sort, setSort] = useState<"name:asc" | "name:desc" | "code:asc" | "code:desc" | "lastChecked:asc" | "lastChecked:desc">("name:asc");
+  const [editing, setEditing] = useState<ApplicationFormData | null>(null);
 
   const visibleApps = useMemo(() => {
     const term = search.toLowerCase();
@@ -83,12 +93,43 @@ export default function ApplicationsPage() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle>Registered Applications</CardTitle>
           <CardAction>
+            <Button size="icon" variant="outline" onClick={() => setEditing({
+              id: crypto.randomUUID(),
+              name: "",
+              code: "",
+              basePath: "",
+              url: "",
+              description: "",
+              isOnline: false,
+              lastChecked: new Date().toISOString(),
+              version: null,
+              tags: null,
+              owner: null,
+            })}>
+              <Plus className="w-4 h-4" />
+            </Button>
             <Button size="icon" variant="outline" onClick={refresh} disabled={loading}>
               <RefreshCw className="w-4 h-4" />
             </Button>
           </CardAction>
         </CardHeader>
         <CardContent>
+          {editing && (
+            <div className="mb-4">
+              <ApplicationForm
+                defaultValues={editing}
+                onSubmit={async (data) => {
+                  if (applications.find((a) => a.id === data.id)) {
+                    await updateApplication(data);
+                  } else {
+                    await createApplication(data);
+                  }
+                  setEditing(null);
+                }}
+                submitLabel={applications.find((a) => a.id === editing.id) ? "Update" : "Create"}
+              />
+            </div>
+          )}
           <div className="flex flex-col md:flex-row gap-2 mb-4">
             <Input
               placeholder="Search by name or code"
@@ -121,7 +162,12 @@ export default function ApplicationsPage() {
             </Select>
           </div>
           <div className="relative">
-            <ApplicationTable applications={visibleApps} loading={loading} />
+            <ApplicationTable
+              applications={visibleApps}
+              loading={loading}
+              onEdit={(app) => setEditing(app)}
+              onDelete={(app) => deleteApplication(app.id)}
+            />
           </div>
         </CardContent>
       </Card>

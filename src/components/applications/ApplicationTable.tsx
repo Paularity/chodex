@@ -1,13 +1,19 @@
 import type { Application } from "@/lib/api/models/application.model";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import { Check, Loader2, X } from "lucide-react";
+import { Check, Loader2, X, Pencil, Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-interface Props {
+interface ActionProps {
+  onEdit: (app: Application) => void;
+  onDelete: (app: Application) => void;
+}
+
+interface Props extends ActionProps {
   applications: Application[];
   loading: boolean;
 }
 
-export default function ApplicationTable({ applications, loading }: Props) {
+export default function ApplicationTable({ applications, loading, onEdit, onDelete }: Props) {
   if (!applications.length) {
     return loading ? (
       <div className="flex items-center justify-center py-8">
@@ -30,6 +36,7 @@ export default function ApplicationTable({ applications, loading }: Props) {
           <th className="p-2 text-left font-semibold">URL</th>
           <th className="p-2 text-left font-semibold">Last Checked</th>
           <th className="p-2 font-semibold text-center w-[20px]">Status</th>
+          <th className="p-2 font-semibold text-center w-[60px]">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -67,6 +74,14 @@ export default function ApplicationTable({ applications, loading }: Props) {
                     </TooltipContent>
                   </Tooltip>
                 )}
+              </td>
+              <td className="p-2 text-center space-x-1 whitespace-nowrap">
+                <Button size="icon" variant="ghost" onClick={() => onEdit(app)}>
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => onDelete(app)}>
+                  <Trash className="w-4 h-4" />
+                </Button>
               </td>
             </tr>
         ))}
