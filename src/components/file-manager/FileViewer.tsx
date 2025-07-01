@@ -8,15 +8,20 @@ interface Props {
 export default function FileViewer({ file }: Props) {
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="bg-muted/50 border-b">
         <CardTitle>{file ? file.name : "Select a file"}</CardTitle>
-        {file && <CardDescription className="truncate">{file.fullPath}</CardDescription>}
+        {file && (
+          <CardDescription className="truncate text-muted-foreground">
+            {file.fullPath}
+          </CardDescription>
+        )}
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         {file ? (
           <>
             <p className="text-muted-foreground">Type: {file.fileType}</p>
             <p className="text-muted-foreground">Size: {file.size} bytes</p>
+            <p className="text-muted-foreground">Creator: {file.creator}</p>
             <p className="text-muted-foreground">Path: {file.fullPath}</p>
           </>
         ) : (

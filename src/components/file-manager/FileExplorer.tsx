@@ -6,7 +6,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Folder as FolderIcon, File as FileIcon } from "lucide-react";
+import {
+  Loader2,
+  Folder as FolderIcon,
+  File as FileIcon,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 import { useState } from "react";
 
 interface Props {
@@ -69,33 +75,48 @@ export default function FileExplorer({ files, onSelect, selectedId, loading }: P
 
     return (
       <li>
-        <div className="flex items-center" style={{ marginLeft: depth * 12 }}>
+        <div
+          className={
+            "flex items-center rounded-sm pr-2" +
+            (isSelected ? " bg-blue-600 text-white" : " hover:bg-accent")
+          }
+          style={{ marginLeft: depth * 12 }}
+        >
           {node.isFolder ? (
             <Button
               variant="ghost"
               size="icon"
-              className="mr-1 h-6 w-6"
+              className="mr-1 h-5 w-5"
               onClick={() => setOpen((o) => !o)}
             >
-              {open ? <FolderIcon className="w-4 h-4" /> : <FolderIcon className="w-4 h-4 opacity-50" />}
+              {open ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
             </Button>
+          ) : (
+            <span className="w-5 mr-1" />
+          )}
+          {node.isFolder ? (
+            <FolderIcon className="w-4 h-4 mr-1" />
           ) : (
             <FileIcon className="w-4 h-4 mr-1" />
           )}
           {node.file ? (
             <Button
-              variant={isSelected ? "secondary" : "ghost"}
-              className="flex-1 justify-start"
+              variant="ghost"
+              className="flex-1 justify-start h-6"
               onClick={() => node.file && onSelect(node.file)}
             >
               {node.name}
             </Button>
           ) : (
-            <span className="text-sm text-muted-foreground">{node.name}</span>
+            <span className="flex-1 text-sm text-muted-foreground">{node.name}</span>
           )}
         </div>
         {open && node.children && node.children.length > 0 && (
-          <ul className="space-y-1">
+          <ul className="space-y-0.5">
             {node.children.map((c) => (
               <Node key={c.path} node={c} depth={depth + 1} />
             ))}
@@ -110,13 +131,13 @@ export default function FileExplorer({ files, onSelect, selectedId, loading }: P
       <CardHeader className="pb-2">
         <CardTitle>Explorer</CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-1">
         {loading ? (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
           </div>
         ) : tree.length ? (
-          <ul className="space-y-1">
+          <ul className="space-y-0.5">
             {tree.map((node) => (
               <Node key={node.path} node={node} />
             ))}
