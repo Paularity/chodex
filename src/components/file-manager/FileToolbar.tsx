@@ -24,7 +24,11 @@ export default function FileToolbar() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="ghost" className="gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="gap-1 transition-transform duration-150 active:scale-95"
+              >
                 <Plus className="w-4 h-4" /> New
               </Button>
             </DropdownMenuTrigger>
@@ -32,10 +36,10 @@ export default function FileToolbar() {
           <TooltipContent>New</TooltipContent>
         </Tooltip>
         <DropdownMenuContent>
-          <DropdownMenuItem className="gap-1">
+          <DropdownMenuItem className="gap-1 transition-colors duration-150">
             <FolderPlus className="w-4 h-4" /> Folder
           </DropdownMenuItem>
-          <DropdownMenuItem className="gap-1">
+          <DropdownMenuItem className="gap-1 transition-colors duration-150">
             <FilePlus className="w-4 h-4" /> File
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -43,7 +47,11 @@ export default function FileToolbar() {
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button size="sm" variant="ghost" className="gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="gap-1 transition-transform duration-150 active:scale-95"
+          >
             <Scissors className="w-4 h-4" /> Cut
           </Button>
         </TooltipTrigger>
@@ -52,7 +60,11 @@ export default function FileToolbar() {
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button size="sm" variant="ghost" className="gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="gap-1 transition-transform duration-150 active:scale-95"
+          >
             <CopyIcon className="w-4 h-4" /> Copy
           </Button>
         </TooltipTrigger>
@@ -61,7 +73,11 @@ export default function FileToolbar() {
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button size="sm" variant="ghost" className="gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="gap-1 transition-transform duration-150 active:scale-95"
+          >
             <Trash2 className="w-4 h-4" /> Delete
           </Button>
         </TooltipTrigger>
@@ -72,7 +88,11 @@ export default function FileToolbar() {
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button size="sm" variant="ghost" className="gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="gap-1 transition-transform duration-150 active:scale-95"
+          >
             <RefreshCcw className="w-4 h-4" /> Refresh
           </Button>
         </TooltipTrigger>

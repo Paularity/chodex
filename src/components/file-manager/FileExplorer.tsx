@@ -78,17 +78,29 @@ export default function FileExplorer({ files, onSelect, selectedId, loading }: P
       <li>
         <div
           className={
-            "flex items-center rounded-sm pr-2 transition-colors" +
-            (isSelected ? " bg-blue-600 text-white" : " hover:bg-accent")
+            "group flex items-center rounded-sm pr-2 transition-all duration-200 cursor-pointer" +
+            (isSelected
+              ? " bg-blue-600 text-white"
+              : " hover:bg-accent/50 active:scale-[0.98]")
           }
           style={{ marginLeft: depth * 12 }}
+          onClick={() => {
+            if (node.isFolder) {
+              setOpen((o) => !o);
+            } else if (node.file) {
+              onSelect(node.file);
+            }
+          }}
         >
           {node.isFolder ? (
             <Button
               variant="ghost"
               size="icon"
-              className="mr-1 h-5 w-5"
-              onClick={() => setOpen((o) => !o)}
+              className="mr-1 h-5 w-5 transition-transform duration-150 active:scale-95"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen((o) => !o);
+              }}
             >
               {open ? (
                 <ChevronDown className="w-4 h-4" />
@@ -107,18 +119,12 @@ export default function FileExplorer({ files, onSelect, selectedId, loading }: P
           {node.file ? (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex-1 justify-start h-6"
-                  onClick={() => node.file && onSelect(node.file)}
-                >
-                  {node.name}
-                </Button>
+                <span className="flex-1 truncate py-1">{node.name}</span>
               </TooltipTrigger>
               <TooltipContent>{node.file.fullPath}</TooltipContent>
             </Tooltip>
           ) : (
-            <span className="flex-1 text-sm text-muted-foreground">{node.name}</span>
+            <span className="flex-1 text-sm text-muted-foreground py-1">{node.name}</span>
           )}
         </div>
         {open && node.children && node.children.length > 0 && (
