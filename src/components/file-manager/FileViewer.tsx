@@ -8,7 +8,16 @@ import {
 } from "@/components/ui/card";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { format } from "date-fns";
-import { File as FileIcon, Folder as FolderIcon } from "lucide-react";
+import {
+  File as FileIcon,
+  Folder as FolderIcon,
+  User,
+  Calendar,
+  Lock,
+  Shield,
+  Tag as TagIcon,
+  Hash as HashIcon,
+} from "lucide-react";
 
 interface Props {
   file?: FileItem;
@@ -54,60 +63,56 @@ export default function FileViewer({ file }: Props) {
       </CardHeader>
       <CardContent className="text-sm px-0">
         {file ? (
-          <table className="w-full text-sm border">
-            <tbody className="divide-y">
-              <tr>
-                <th className="w-32 px-4 py-2 text-left font-normal text-muted-foreground">
-                  Type
-                </th>
-                <td className="px-4 py-2">{file.fileType}</td>
-              </tr>
-              <tr>
-                <th className="w-32 px-4 py-2 text-left font-normal text-muted-foreground">
-                  Size
-                </th>
-                <td className="px-4 py-2">{formatBytes(file.size)}</td>
-              </tr>
-              <tr>
-                <th className="w-32 px-4 py-2 text-left font-normal text-muted-foreground">
-                  Creator
-                </th>
-                <td className="px-4 py-2">{file.creator}</td>
-              </tr>
-              <tr>
-                <th className="w-32 px-4 py-2 text-left font-normal text-muted-foreground">
-                  Modified
-                </th>
-                <td className="px-4 py-2">
-                  {format(new Date(file.stamp), "PPpp")}
-                </td>
-              </tr>
-              <tr>
-                <th className="w-32 px-4 py-2 text-left font-normal text-muted-foreground">
-                  Read-only
-                </th>
-                <td className="px-4 py-2">{file.readOnly ? "Yes" : "No"}</td>
-              </tr>
-              <tr>
-                <th className="w-32 px-4 py-2 text-left font-normal text-muted-foreground">
-                  Encrypted
-                </th>
-                <td className="px-4 py-2">{file.encrypted ? "Yes" : "No"}</td>
-              </tr>
-              <tr>
-                <th className="w-32 px-4 py-2 text-left font-normal text-muted-foreground">
-                  Tags
-                </th>
-                <td className="px-4 py-2">{file.tags ?? "-"}</td>
-              </tr>
-              <tr>
-                <th className="w-32 px-4 py-2 text-left font-normal text-muted-foreground">
-                  Hash
-                </th>
-                <td className="px-4 py-2 break-all">{file.hash}</td>
-              </tr>
-            </tbody>
-          </table>
+          <dl className="border divide-y">
+            <div className="grid grid-cols-[8rem_1fr] items-center">
+              <dt className="flex items-center gap-1 px-4 py-2 text-muted-foreground">
+                <FileIcon className="w-4 h-4" /> Type
+              </dt>
+              <dd className="px-4 py-2">{file.fileType}</dd>
+            </div>
+            <div className="grid grid-cols-[8rem_1fr] items-center">
+              <dt className="flex items-center gap-1 px-4 py-2 text-muted-foreground">
+                <FileIcon className="w-4 h-4" /> Size
+              </dt>
+              <dd className="px-4 py-2">{formatBytes(file.size)}</dd>
+            </div>
+            <div className="grid grid-cols-[8rem_1fr] items-center">
+              <dt className="flex items-center gap-1 px-4 py-2 text-muted-foreground">
+                <User className="w-4 h-4" /> Creator
+              </dt>
+              <dd className="px-4 py-2">{file.creator}</dd>
+            </div>
+            <div className="grid grid-cols-[8rem_1fr] items-center">
+              <dt className="flex items-center gap-1 px-4 py-2 text-muted-foreground">
+                <Calendar className="w-4 h-4" /> Modified
+              </dt>
+              <dd className="px-4 py-2">{format(new Date(file.stamp), "PPpp")}</dd>
+            </div>
+            <div className="grid grid-cols-[8rem_1fr] items-center">
+              <dt className="flex items-center gap-1 px-4 py-2 text-muted-foreground">
+                <Lock className="w-4 h-4" /> Read-only
+              </dt>
+              <dd className="px-4 py-2">{file.readOnly ? "Yes" : "No"}</dd>
+            </div>
+            <div className="grid grid-cols-[8rem_1fr] items-center">
+              <dt className="flex items-center gap-1 px-4 py-2 text-muted-foreground">
+                <Shield className="w-4 h-4" /> Encrypted
+              </dt>
+              <dd className="px-4 py-2">{file.encrypted ? "Yes" : "No"}</dd>
+            </div>
+            <div className="grid grid-cols-[8rem_1fr] items-center">
+              <dt className="flex items-center gap-1 px-4 py-2 text-muted-foreground">
+                <TagIcon className="w-4 h-4" /> Tags
+              </dt>
+              <dd className="px-4 py-2">{file.tags ?? "-"}</dd>
+            </div>
+            <div className="grid grid-cols-[8rem_1fr] items-center">
+              <dt className="flex items-center gap-1 px-4 py-2 text-muted-foreground">
+                <HashIcon className="w-4 h-4" /> Hash
+              </dt>
+              <dd className="px-4 py-2 break-all">{file.hash}</dd>
+            </div>
+          </dl>
         ) : (
           <p className="text-muted-foreground px-6">No file selected.</p>
         )}
