@@ -1,19 +1,18 @@
-import axios from "axios";
-import { FileEndpoints } from "./endpoints";
-import { createAuthConfig } from "../helpers";
 import type { ApiResponse } from "../models/api-response.model";
 import type { FileItem } from "../models/file.model";
+import { mockFiles } from "@/mocks/fileItems";
 
 export const FileService = {
   list: async (
-    token: string,
-    tenantId: string
+    _token: string,
+    _tenantId: string
   ): Promise<ApiResponse<FileItem[]>> => {
-    const response = await axios.get(
-      FileEndpoints.list,
-      createAuthConfig(token, tenantId)
-    );
-    return response.data;
+    return Promise.resolve({
+      success: true,
+      error: null,
+      data: mockFiles as unknown as FileItem[],
+      count: mockFiles.length,
+    });
   },
 };
 

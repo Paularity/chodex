@@ -2,27 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useFileStore } from './fileStore';
 import { useAuthStore } from './authStore';
 import { FileService } from '@/lib/api/file/service';
-import type { FileItem } from '@/lib/api/models/file.model';
+import { mockFiles } from '@/mocks/fileItems';
 
-const sample: FileItem = {
-  id: '1',
-  name: 'report.pdf',
-  fullPath: '/files/report.pdf',
-  fileType: 'pdf',
-  stamp: '',
-  creator: 'tester',
-  readOnly: true,
-  encrypted: false,
-  size: 100,
-  tags: null,
-  hash: 'hash',
-};
-
-vi.mock('@/lib/api/file/service', () => ({
-  FileService: {
-    list: vi.fn().mockResolvedValue({ data: [sample] }),
-  },
-}));
+const sample = mockFiles[0];
 
 describe('useFileStore', () => {
   beforeEach(() => {
@@ -36,9 +18,11 @@ describe('useFileStore', () => {
   });
 
   it('fetchFiles retrieves data', async () => {
+    const spy = vi.spyOn(FileService, 'list');
     await useFileStore.getState().fetchFiles();
-    expect(FileService.list).toHaveBeenCalledWith('tok', 'tenant1');
-    expect(useFileStore.getState().files.length).toBe(1);
+    expect(spy).toHaveBeenCalledWith('tok', 'tenant1');
+    expect(useFileStore.getState().files.length).toBe(mockFiles.length);
+    spy.mockRestore();
     expect(useFileStore.getState().loading).toBe(false);
   });
 
