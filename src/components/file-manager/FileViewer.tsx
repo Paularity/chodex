@@ -16,14 +16,18 @@ export default function FileViewer({ file }: Props) {
           </CardDescription>
         )}
       </CardHeader>
-      <CardContent className="space-y-2 text-sm">
+      <CardContent className="text-sm">
         {file ? (
-          <>
-            <p className="text-muted-foreground">Type: {file.fileType}</p>
-            <p className="text-muted-foreground">Size: {file.size} bytes</p>
-            <p className="text-muted-foreground">Creator: {file.creator}</p>
-            <p className="text-muted-foreground">Path: {file.fullPath}</p>
-          </>
+          <dl className="grid grid-cols-[max-content_1fr] gap-x-2 gap-y-1">
+            <dt className="text-muted-foreground">Type</dt>
+            <dd>{file.fileType}</dd>
+            <dt className="text-muted-foreground">Size</dt>
+            <dd>{file.size.toLocaleString()} bytes</dd>
+            <dt className="text-muted-foreground">Creator</dt>
+            <dd>{file.creator}</dd>
+            <dt className="text-muted-foreground">Path</dt>
+            <dd className="truncate">{file.fullPath}</dd>
+          </dl>
         ) : (
           <p className="text-muted-foreground">No file selected.</p>
         )}

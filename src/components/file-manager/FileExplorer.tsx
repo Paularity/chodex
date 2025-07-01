@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   Loader2,
   Folder as FolderIcon,
@@ -77,7 +78,7 @@ export default function FileExplorer({ files, onSelect, selectedId, loading }: P
       <li>
         <div
           className={
-            "flex items-center rounded-sm pr-2" +
+            "flex items-center rounded-sm pr-2 transition-colors" +
             (isSelected ? " bg-blue-600 text-white" : " hover:bg-accent")
           }
           style={{ marginLeft: depth * 12 }}
@@ -104,13 +105,18 @@ export default function FileExplorer({ files, onSelect, selectedId, loading }: P
             <FileIcon className="w-4 h-4 mr-1" />
           )}
           {node.file ? (
-            <Button
-              variant="ghost"
-              className="flex-1 justify-start h-6"
-              onClick={() => node.file && onSelect(node.file)}
-            >
-              {node.name}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex-1 justify-start h-6"
+                  onClick={() => node.file && onSelect(node.file)}
+                >
+                  {node.name}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{node.file.fullPath}</TooltipContent>
+            </Tooltip>
           ) : (
             <span className="flex-1 text-sm text-muted-foreground">{node.name}</span>
           )}
@@ -137,11 +143,13 @@ export default function FileExplorer({ files, onSelect, selectedId, loading }: P
             <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
           </div>
         ) : tree.length ? (
-          <ul className="space-y-0.5">
-            {tree.map((node) => (
-              <Node key={node.path} node={node} />
-            ))}
-          </ul>
+          <div className="overflow-auto max-h-[60vh]">
+            <ul className="space-y-0.5">
+              {tree.map((node) => (
+                <Node key={node.path} node={node} />
+              ))}
+            </ul>
+          </div>
         ) : (
           <p className="p-2 text-muted-foreground">No files found.</p>
         )}
