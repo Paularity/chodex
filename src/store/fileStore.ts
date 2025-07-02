@@ -9,6 +9,7 @@ interface FileState {
   setFiles: (files: FileItem[]) => void;
   setLoading: (loading: boolean) => void;
   fetchFiles: () => Promise<void>;
+  createFile: (file: Omit<FileItem, "id">) => Promise<void>;
 }
 
 export const useFileStore = create<FileState>((set) => ({
@@ -25,6 +26,11 @@ export const useFileStore = create<FileState>((set) => ({
     } finally {
       set({ loading: false });
     }
+  },
+  createFile: async (file) => {
+    const { token, tenantId } = useAuthStore.getState();
+    await FileService.create(file, token, tenantId);
+    await useFileStore.getState().fetchFiles();
   },
 }));
 
