@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import FileForm, { FileFormData } from "./FileForm";
+import FileForm, { type FileFormData } from "./FileForm";
 import { useFileStore } from "@/store/fileStore";
 import { toast } from "sonner";
 
@@ -132,16 +132,21 @@ export default function FileToolbar() {
           </DialogHeader>
           <FileForm
             defaultValues={defaultValues}
-            onSubmit={async (data) => {
-              setSaving(true);
-              try {
-                await createFile(data);
-                toast.success("File created");
-                setOpen(false);
-              } finally {
-                setSaving(false);
-              }
-            }}
+              onSubmit={async (data) => {
+                setSaving(true);
+                try {
+                  await createFile({
+                    ...data,
+                    tags: data.tags ?? null,
+                    readOnly: data.readOnly ?? false,
+                    encrypted: data.encrypted ?? false,
+                  });
+                  toast.success("File created");
+                  setOpen(false);
+                } finally {
+                  setSaving(false);
+                }
+              }}
             loading={saving}
             onCancel={() => setOpen(false)}
           />
