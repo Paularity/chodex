@@ -5,6 +5,7 @@ import HomePage from "./components/pages/Home";
 import ProfilePage from "./components/pages/Profile";
 import SettingsPage from "./components/pages/Settings";
 import ApplicationsPage from "./components/pages/Applications";
+import FileManagerPage from "./components/pages/FileManager";
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="applications" element={<ApplicationsPage />} />
+        <Route path="files" element={<FileManagerPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Route>
     </Routes>
