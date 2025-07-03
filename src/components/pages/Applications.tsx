@@ -65,11 +65,17 @@ export default function ApplicationsPage() {
         status === "all" ? true : status === "online" ? a.isOnline : !a.isOnline
       )
       .sort((a, b) => {
-        let va: string | number = (a as any)[field];
-        let vb: string | number = (b as any)[field];
-        if (field === "lastChecked") {
-          va = new Date(va).getTime();
-          vb = new Date(vb).getTime();
+        let va: string | number;
+        let vb: string | number;
+        if (field === "name" || field === "code") {
+          va = a[field];
+          vb = b[field];
+        } else if (field === "lastChecked") {
+          va = new Date(a.lastChecked).getTime();
+          vb = new Date(b.lastChecked).getTime();
+        } else {
+          va = 0;
+          vb = 0;
         }
         if (va < vb) return dir === "asc" ? -1 : 1;
         if (va > vb) return dir === "asc" ? 1 : -1;
@@ -223,7 +229,7 @@ export default function ApplicationsPage() {
               onChange={(e) => setSearch(e.target.value)}
               className="md:w-1/3"
             />
-            <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+            <Select value={status} onValueChange={(v) => setStatus(v as "all" | "online" | "offline")}>
               <SelectTrigger className="md:w-32">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -233,7 +239,7 @@ export default function ApplicationsPage() {
                 <SelectItem value="offline">Offline</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={sort} onValueChange={(v) => setSort(v as any)}>
+            <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
               <SelectTrigger className="md:w-40">
                 <SelectValue />
               </SelectTrigger>
