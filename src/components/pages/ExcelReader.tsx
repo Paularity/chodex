@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import "tabulator-tables/dist/css/tabulator.min.css";
 import { Upload, Loader2, FileSpreadsheet } from 'lucide-react';
@@ -16,7 +16,7 @@ export default function ExcelReaderPage() {
   }
   const tables = useRef<Record<string, TabulatorInstance>>({});
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!workbook) return;
 
     workbook.sheets.forEach((sheet) => {
@@ -88,6 +88,7 @@ export default function ExcelReaderPage() {
                       tableContainers.current[sheet.sheetName] = el;
                     }}
                     id={`table-${idx}`}
+                    className="w-full"
                   />
                 </div>
               ))}
