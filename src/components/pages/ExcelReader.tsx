@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import Tabulator from 'tabulator-tables';
+import 'tabulator-tables/dist/css/tabulator.min.css';
 import { Upload, Loader2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -8,6 +10,37 @@ import { useExcelStore } from '@/store/excelStore';
 export default function ExcelReaderPage() {
   const { workbook, loading, readExcel } = useExcelStore();
   const [file, setFile] = useState<File | null>(null);
+  const tableContainers = useRef<Record<string, HTMLDivElement | null>>({});
+  const tables = useRef<Record<string, any>>({});
+
+  useEffect(() => {
+    if (!workbook) return;
+
+    workbook.sheets.forEach((sheet, idx) => {
+      const container = tableContainers.current[sheet.sheetName];
+      if (!container) return;
+      if (tables.current[sheet.sheetName]) {
+        tables.current[sheet.sheetName].destroy();
+      }
+      const data = sheet.rows.map((row) => {
+        const obj: Record<string, string | number | null> = {};
+        sheet.columns.forEach((col, i) => {
+          obj[col.name] = row[i];
+        });
+        return obj;
+      });
+      tables.current[sheet.sheetName] = new Tabulator(container, {
+        data,
+        columns: sheet.columns.map((col) => ({ title: col.name, field: col.name })),
+        layout: 'fitDataTable',
+      });
+    });
+
+    return () => {
+      Object.values(tables.current).forEach((t) => t.destroy && t.destroy());
+      tables.current = {};
+    };
+  }, [workbook]);
 
   const handleSubmit = async () => {
     if (!file) return;
@@ -41,32 +74,11 @@ export default function ExcelReaderPage() {
             </Button>
           </div>
           {workbook && (
-            <div className="overflow-auto">
-              {workbook.sheets.map((sheet) => (
-                <div key={sheet.sheetName} className="mb-6">
-                  <h3 className="font-semibold mb-2">{sheet.sheetName}</h3>
-                  <table className="w-full text-sm border">
-                    <thead className="bg-muted">
-                      <tr>
-                        {sheet.columns.map((col) => (
-                          <th key={col.name} className="p-2 text-left font-semibold">
-                            {col.name}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sheet.rows.map((row, i) => (
-                        <tr key={i} className="border-t">
-                          {row.map((cell, j) => (
-                            <td key={j} className="p-2">
-                              {String(cell)}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            <div className="space-y-8">
+              {workbook.sheets.map((sheet, idx) => (
+                <div key={sheet.sheetName} className="space-y-2">
+                  <h3 className="font-semibold">{sheet.sheetName}</h3>
+                  <div ref={(el) => (tableContainers.current[sheet.sheetName] = el)} id={`table-${idx}`} />
                 </div>
               ))}
             </div>
