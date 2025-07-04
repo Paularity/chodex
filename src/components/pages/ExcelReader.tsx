@@ -22,8 +22,9 @@ export default function ExcelReaderPage() {
     workbook.sheets.forEach((sheet) => {
       const container = tableContainers.current[sheet.sheetName];
       if (!container) return;
-      if (tables.current[sheet.sheetName]) {
-        tables.current[sheet.sheetName].destroy();
+      const existing = tables.current[sheet.sheetName];
+      if (existing?.destroy) {
+        existing.destroy();
       }
       const data = sheet.rows.map((row) => {
         const obj: Record<string, string | number | null> = {};
