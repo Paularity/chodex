@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
-import { TabulatorFull as Tabulator } from 'tabulator-tables';
-import 'tabulator-tables/dist/css/tabulator.min.css';
+import { useState, useRef, useEffect } from "react";
+import { TabulatorFull as Tabulator } from "tabulator-tables";
+import "tabulator-tables/dist/css/tabulator.min.css";
 import { Upload, Loader2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -11,12 +11,15 @@ export default function ExcelReaderPage() {
   const { workbook, loading, readExcel } = useExcelStore();
   const [file, setFile] = useState<File | null>(null);
   const tableContainers = useRef<Record<string, HTMLDivElement | null>>({});
-  const tables = useRef<Record<string, any>>({});
+  interface TabulatorInstance {
+    destroy?: () => void;
+  }
+  const tables = useRef<Record<string, TabulatorInstance>>({});
 
   useEffect(() => {
     if (!workbook) return;
 
-    workbook.sheets.forEach((sheet, idx) => {
+    workbook.sheets.forEach((sheet) => {
       const container = tableContainers.current[sheet.sheetName];
       if (!container) return;
       if (tables.current[sheet.sheetName]) {
@@ -32,7 +35,7 @@ export default function ExcelReaderPage() {
       tables.current[sheet.sheetName] = new Tabulator(container, {
         data,
         columns: sheet.columns.map((col) => ({ title: col.name, field: col.name })),
-        layout: 'fitDataTable',
+        layout: "fitDataTable",
       });
     });
 
@@ -79,7 +82,12 @@ export default function ExcelReaderPage() {
               {workbook.sheets.map((sheet, idx) => (
                 <div key={sheet.sheetName} className="space-y-2">
                   <h3 className="font-semibold">{sheet.sheetName}</h3>
-                  <div ref={(el) => (tableContainers.current[sheet.sheetName] = el)} id={`table-${idx}`} />
+                  <div
+                    ref={(el) => {
+                      tableContainers.current[sheet.sheetName] = el;
+                    }}
+                    id={`table-${idx}`}
+                  />
                 </div>
               ))}
             </div>
