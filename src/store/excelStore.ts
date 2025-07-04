@@ -8,7 +8,7 @@ interface ExcelState {
   loading: boolean;
   setWorkbook: (wb: ExcelWorkbook | null) => void;
   setLoading: (loading: boolean) => void;
-  readExcel: (file: File) => Promise<void>;
+  readExcel: (file: File) => Promise<ExcelWorkbook>;
 }
 
 export const useExcelStore = create<ExcelState>((set) => ({
@@ -22,6 +22,7 @@ export const useExcelStore = create<ExcelState>((set) => ({
       const { token, tenantId } = useAuthStore.getState();
       const res = await ExcelService.read(file, token, tenantId);
       set({ workbook: res.data });
+      return res.data;
     } finally {
       set({ loading: false });
     }

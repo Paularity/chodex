@@ -31,8 +31,9 @@ describe('useExcelStore', () => {
   });
 
   it('readExcel posts data and sets workbook', async () => {
-    await useExcelStore.getState().readExcel({} as File);
+    const result = await useExcelStore.getState().readExcel({} as File);
     expect(ExcelService.read).toHaveBeenCalledWith({} as File, 'tok', 'tenant1');
+    expect(result.workbookName).toBe('test.xlsx');
     expect(useExcelStore.getState().workbook?.workbookName).toBe('test.xlsx');
     expect(useExcelStore.getState().loading).toBe(false);
   });

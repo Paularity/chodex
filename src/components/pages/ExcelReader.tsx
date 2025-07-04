@@ -45,6 +45,7 @@ export default function ExcelReaderPage() {
   const handleSubmit = async () => {
     if (!file) return;
     await readExcel(file);
+    setFile(null);
   };
 
   return (
