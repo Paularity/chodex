@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import Tabulator from 'tabulator-tables';
+import { TabulatorFull as Tabulator } from 'tabulator-tables';
 import 'tabulator-tables/dist/css/tabulator.min.css';
 import { Upload, Loader2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
