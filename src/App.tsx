@@ -6,6 +6,7 @@ import ProfilePage from "./components/pages/Profile";
 import SettingsPage from "./components/pages/Settings";
 import ApplicationsPage from "./components/pages/Applications";
 import FileManagerPage from "./components/pages/FileManager";
+import ExcelReaderPage from "./components/pages/ExcelReader";
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -25,6 +26,7 @@ export default function App() {
         <Route index element={<HomePage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="excel" element={<ExcelReaderPage />} />
         <Route path="applications" element={<ApplicationsPage />} />
         <Route path="files" element={<FileManagerPage />} />
         <Route path="*" element={<Navigate to="/" />} />
