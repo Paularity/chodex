@@ -1,5 +1,4 @@
 import axios from "axios";
-import type { ApiResponse } from "../models/api-response.model";
 import type { ExcelWorkbook } from "../models/excel-workbook.model";
 import { ExcelEndpoints } from "./endpoints";
 import { createAuthConfig } from "../helpers";
@@ -9,7 +8,7 @@ export const ExcelService = {
     file: File,
     token: string,
     tenantId: string
-  ): Promise<ApiResponse<ExcelWorkbook>> => {
+  ): Promise<ExcelWorkbook> => {
     const formData = new FormData();
     formData.append("file", file);
 

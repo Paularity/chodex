@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { ExcelService } from "@/lib/api/excel/service";
-import type { ExcelWorkbook } from "@/lib/api";
+import type { ExcelWorkbook } from "@/lib/api/models/excel-workbook.model";
 import { useAuthStore } from "./authStore";
 
 interface ExcelState {
@@ -8,7 +8,8 @@ interface ExcelState {
   loading: boolean;
   setWorkbook: (wb: ExcelWorkbook | null) => void;
   setLoading: (loading: boolean) => void;
-  readExcel: (file: File) => Promise<ExcelWorkbook>;
+  readExcel: (file: File) => Promise<ExcelWorkbook | undefined>;
+  renameColumn: (sheetName: string, colIdx: number, newName: string) => void;
 }
 
 export const useExcelStore = create<ExcelState>((set) => ({
@@ -21,10 +22,29 @@ export const useExcelStore = create<ExcelState>((set) => ({
     try {
       const { token, tenantId } = useAuthStore.getState();
       const res = await ExcelService.read(file, token, tenantId);
-      set({ workbook: res.data });
-      return res.data;
+      console.log("[excelStore] ExcelService.read response:", res);
+      if (res && res.workbookName && res.sheets) {
+        set({ workbook: res });
+        return res;
+      } else {
+        set({ workbook: null });
+        return undefined;
+      }
     } finally {
       set({ loading: false });
     }
+  },
+  renameColumn: (sheetName: string, colIdx: number, newName: string) => {
+    set((state) => {
+      if (!state.workbook) return {};
+      const updatedSheets = state.workbook.sheets.map((sheet) => {
+        if (sheet.sheetName !== sheetName) return sheet;
+        const newColumns = sheet.columns.map((col, idx) =>
+          idx === colIdx ? { ...col, name: newName } : col
+        );
+        return { ...sheet, columns: newColumns };
+      });
+      return { workbook: { ...state.workbook, sheets: updatedSheets } };
+    });
   },
 }));
