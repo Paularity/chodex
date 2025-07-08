@@ -533,6 +533,80 @@ export default function ExcelReaderPage() {
   // Prop to control index column visibility per sheet
   const [indexColumnSheets, setIndexColumnSheets] = useState<string[]>([]);
 
+  // Show loading overlay when switching sheets
+  const [sheetLoading, setSheetLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Loading table...');
+  // Store scroll position for restoration per sheet
+  const scrollPositionsRef = useRef<Record<string, { top: number, left: number }>>({});
+  // Minimal Tabulator type for scroll methods
+  interface TabulatorType {
+    getScrollPosition: () => [number, number];
+    scrollTo: (left: number, top: number) => void;
+  }
+  // Helper to get current Tabulator instance for the active sheet
+  const getActiveTabulator = () => {
+    if (!activeSheet) return null;
+    const table = tables.current[activeSheet];
+    if (table && typeof (table as TabulatorType).getScrollPosition === 'function') {
+      return table as TabulatorType;
+    }
+    return null;
+  };
+
+  // Wrap setActiveSheet to show loading animation and preserve scroll per sheet
+  const handleSetActiveSheet = (sheetName: string) => {
+    // Save scroll position of current table for the current sheet
+    if (activeSheet) {
+      const tab = getActiveTabulator();
+      if (tab) {
+        const [left, top] = tab.getScrollPosition();
+        scrollPositionsRef.current[activeSheet] = { top, left };
+      }
+    }
+    setLoadingMessage('Switching sheet...');
+    setSheetLoading(true);
+    setTimeout(() => {
+      setActiveSheet(sheetName);
+      setSheetLoading(false);
+      // Restore scroll for the new sheet after a short delay
+      setTimeout(() => {
+        const tabAfter = tables.current[sheetName];
+        const pos = scrollPositionsRef.current[sheetName] || { left: 0, top: 0 };
+        if (tabAfter && typeof (tabAfter as TabulatorType).scrollTo === 'function') {
+          (tabAfter as TabulatorType).scrollTo(pos.left, pos.top);
+        }
+      }, 100);
+    }, 1000); // 1 second for smooth transition
+  };
+
+  // Pass loading state setter to toolbar for animated feedback and preserve scroll per sheet
+  const handleToolbarLoading = (fn: () => void, message = 'Updating table...') => {
+    // Save scroll position of current table for the current sheet
+    if (activeSheet) {
+      const tab = getActiveTabulator();
+      if (tab) {
+        const [left, top] = tab.getScrollPosition();
+        scrollPositionsRef.current[activeSheet] = { top, left };
+      }
+    }
+    setLoadingMessage(message);
+    setSheetLoading(true);
+    setTimeout(() => {
+      fn();
+      setSheetLoading(false);
+      // Restore scroll for the current sheet after a short delay
+      setTimeout(() => {
+        if (activeSheet) {
+          const tabAfter = getActiveTabulator();
+          const pos = scrollPositionsRef.current[activeSheet] || { left: 0, top: 0 };
+          if (tabAfter && typeof tabAfter.scrollTo === 'function') {
+            tabAfter.scrollTo(pos.left, pos.top);
+          }
+        }
+      }, 100);
+    }, 1000);
+  };
+
   return (
     <div className="space-y-4">
       {/* Always show upload section with loading prop */}
@@ -559,14 +633,31 @@ export default function ExcelReaderPage() {
               <ExcelToolbar
                 indexColumnSheets={indexColumnSheets}
                 setIndexColumnSheets={setIndexColumnSheets}
+                onLoading={handleToolbarLoading}
               />
               {workbook && workbook.sheets.length > 0 && (
-                <SheetTabs
-                  workbook={workbook}
-                  activeSheet={activeSheet}
-                  setActiveSheet={setActiveSheet}
-                  getTableRef={getTableRef}
-                />
+                <div className="relative">
+                  <SheetTabs
+                    workbook={workbook}
+                    activeSheet={activeSheet}
+                    setActiveSheet={handleSetActiveSheet}
+                    getTableRef={getTableRef}
+                  />
+                  {(loading || sheetLoading) && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-gradient-to-br from-black/70 via-gray-900/80 to-primary/80 backdrop-blur-sm rounded-xl">
+                      <div className="flex flex-col items-center gap-6 p-8 rounded-2xl shadow-2xl bg-black/60 border border-primary/30 animate-fade-in">
+                        <div className="relative flex items-center justify-center mb-2">
+                          <div className="absolute animate-ping w-20 h-20 rounded-full bg-primary/30" />
+                          <div className="animate-spin rounded-full border-4 border-t-primary border-gray-200 h-16 w-16 shadow-lg" />
+                        </div>
+                        <span className="text-2xl font-extrabold text-white drop-shadow-xl tracking-wide text-center select-none">
+                          {loading ? 'Loading table...' : loadingMessage}
+                        </span>
+                        <span className="text-sm text-gray-200/80 mt-2 text-center select-none">Please wait while we process your data.</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
               {(!workbook || !workbook.sheets || workbook.sheets.length === 0) && !loading && (
                 <div className="text-center text-gray-500 py-8">No data to display. Please upload an Excel file.</div>

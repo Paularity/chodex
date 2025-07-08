@@ -4,9 +4,10 @@ import { useExcelStore } from '@/store/excelStore';
 import { Pencil, CheckCircle, Edit3, XCircle, Trash2, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets }: {
+export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets, onLoading }: {
     indexColumnSheets: string[];
     setIndexColumnSheets: (sheets: string[]) => void;
+    onLoading?: (fn: () => void, message?: string) => void;
 }) {
     const { editMode, setEditMode, workbook, activeSheet } = useExcelStore();
     const hasData = workbook && workbook.sheets && workbook.sheets.length > 0;
@@ -87,6 +88,16 @@ export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets }: {
         useExcelStore.getState().setWorkbook({ ...workbook, sheets: updatedSheets });
     };
 
+    // Wrap actions with loading if onLoading is provided
+    const handleRemoveRowsWithLoading = () => {
+        if (onLoading) onLoading(handleRemoveRows, 'Removing empty rows...');
+        else handleRemoveRows();
+    };
+    const handleToggleIndexColumnWithLoading = () => {
+        if (onLoading) onLoading(handleToggleIndexColumn, indexColumnSheets.includes(activeSheet || '') ? 'Removing table index...' : 'Creating table index...');
+        else handleToggleIndexColumn();
+    };
+
     return (
         <Menubar className="mb-4 rounded-lg border shadow-sm bg-white flex justify-between items-center px-2 py-1">
             <div className="flex items-center gap-2">
@@ -124,7 +135,7 @@ export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets }: {
                     <MenubarContent>
                         {/* Remove Empty Rows action using MenubarItem */}
                         <MenubarItem
-                            onClick={handleRemoveRows}
+                            onClick={handleRemoveRowsWithLoading}
                             className="flex items-center gap-2 font-semibold"
                             disabled={!editMode}
                         >
@@ -133,7 +144,7 @@ export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets }: {
                         </MenubarItem>
                         {/* Toggle Table Index action using MenubarItem */}
                         <MenubarItem
-                            onClick={handleToggleIndexColumn}
+                            onClick={handleToggleIndexColumnWithLoading}
                             className="flex items-center gap-2 font-semibold"
                             disabled={!editMode}
                         >
