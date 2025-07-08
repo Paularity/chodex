@@ -1,14 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem } from '@/components/ui/menubar';
 import { useExcelStore } from '@/store/excelStore';
 import { Pencil, CheckCircle, Edit3, XCircle, Trash2, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Checkbox } from '@/components/ui/checkbox';
 
-export function ExcelToolbar() {
+export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets }: {
+    indexColumnSheets: string[];
+    setIndexColumnSheets: (sheets: string[]) => void;
+}) {
     const { editMode, setEditMode, workbook, activeSheet } = useExcelStore();
     const hasData = workbook && workbook.sheets && workbook.sheets.length > 0;
 
-    // Handler for removing empty rows
+    // Handler for removing empty rows and re-indexing
     const handleRemoveRows = () => {
         if (!workbook || !activeSheet) return;
         const updatedSheets = workbook.sheets.map((sheet) => {
@@ -23,6 +26,15 @@ export function ExcelToolbar() {
                     return false;
                 });
             });
+            // Re-index the __rowIndex for the active sheet after removal
+            const reindexedRows = filteredRows.map((row, idx) => {
+                if (indexColumnSheets.includes(activeSheet || '')) {
+                    (row as any)['__rowIndex'] = idx + 1;
+                } else {
+                    delete (row as any)['__rowIndex'];
+                }
+                return row;
+            });
             if (filteredRows.length === sheet.rows.length) {
                 toast.info('No empty rows to remove.');
             } else {
@@ -30,9 +42,48 @@ export function ExcelToolbar() {
             }
             return {
                 ...sheet,
-                rows: filteredRows,
+                rows: reindexedRows,
             };
         });
+        useExcelStore.getState().setWorkbook({ ...workbook, sheets: updatedSheets });
+    };
+
+    // Handler to toggle index column for the active sheet
+    const handleToggleIndexColumn = () => {
+        if (!workbook || !activeSheet) return;
+        const isActive = indexColumnSheets.includes(activeSheet || '');
+        let updatedSheets = workbook.sheets;
+        if (!isActive) {
+            // Add __rowIndex to each row for the active sheet
+            updatedSheets = workbook.sheets.map((sheet) => {
+                if (sheet.sheetName !== activeSheet) return sheet;
+                const indexedRows = sheet.rows.map((row, idx) => {
+                    (row as any)['__rowIndex'] = idx + 1;
+                    return row;
+                });
+                return {
+                    ...sheet,
+                    rows: indexedRows,
+                };
+            });
+            setIndexColumnSheets([...indexColumnSheets, activeSheet]);
+            toast.success('Table index column has been created.');
+        } else {
+            // Remove __rowIndex from each row for the active sheet
+            updatedSheets = workbook.sheets.map((sheet) => {
+                if (sheet.sheetName !== activeSheet) return sheet;
+                const cleanedRows = sheet.rows.map((row) => {
+                    delete (row as any)['__rowIndex'];
+                    return row;
+                });
+                return {
+                    ...sheet,
+                    rows: cleanedRows,
+                };
+            });
+            setIndexColumnSheets(indexColumnSheets.filter((s) => s !== activeSheet));
+            toast.info('Table index column has been removed.');
+        }
         useExcelStore.getState().setWorkbook({ ...workbook, sheets: updatedSheets });
     };
 
@@ -71,6 +122,7 @@ export function ExcelToolbar() {
                         Data Actions
                     </MenubarTrigger>
                     <MenubarContent>
+                        {/* Remove Empty Rows action using MenubarItem */}
                         <MenubarItem
                             onClick={handleRemoveRows}
                             className="flex items-center gap-2 font-semibold"
@@ -79,6 +131,20 @@ export function ExcelToolbar() {
                             <Trash2 className="w-4 h-4 text-red-600" />
                             Remove Empty Rows
                         </MenubarItem>
+                        {/* Toggle Table Index action using MenubarItem */}
+                        <MenubarItem
+                            onClick={handleToggleIndexColumn}
+                            className="flex items-center gap-2 font-semibold"
+                            disabled={!editMode}
+                        >
+                            {indexColumnSheets.includes(activeSheet || '') ? (
+                                <XCircle className="w-4 h-4 text-red-600" />
+                            ) : (
+                                <Edit3 className="w-4 h-4 text-blue-600" />
+                            )}
+                            {indexColumnSheets.includes(activeSheet || '') ? 'Remove Table Index' : 'Create Table Index'}
+                        </MenubarItem>
+                        {/* ...other menu items can go here... */}
                     </MenubarContent>
                 </MenubarMenu>
             </div>
@@ -91,33 +157,4 @@ export function ExcelToolbar() {
             </div>
         </Menubar>
     );
-}
-
-// Custom Tabulator boolean editor using shadcn Checkbox
-export function shadcnBooleanEditor(cell, onRendered, success, cancel) {
-    // Create a container div
-    const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.justifyContent = 'center';
-    container.style.alignItems = 'center';
-    // Create a React root for the Checkbox
-    const root = window.ReactDOM.createRoot(container);
-    const initial = cell.getValue() === true || cell.getValue() === 'true' || cell.getValue() === 1;
-    root.render(
-        <Checkbox
-            checked={initial}
-            onCheckedChange={val => {
-                success(!!val);
-            }}
-            className="mx-auto"
-            tabIndex={0}
-            autoFocus
-        />
-    );
-    onRendered(() => {
-        // Focus the checkbox
-        const input = container.querySelector('input[type="checkbox"]');
-        if (input) input.focus();
-    });
-    return container;
 }

@@ -69,6 +69,10 @@ export default function ExcelReaderPage() {
         toast.error("No valid sheets found in the imported Excel file.");
       } else {
         toast.success("Excel file imported successfully.");
+        // Force activeSheet to first sheet after upload to ensure Tabulator is mounted
+        if (result.sheets[0]?.sheetName) {
+          setActiveSheet(result.sheets[0].sheetName);
+        }
       }
     } catch {
       toast.error("Failed to read Excel file.");
@@ -153,6 +157,22 @@ export default function ExcelReaderPage() {
     el.innerHTML = "";
     setTimeout(() => {
       const columns = [
+        // Only add index column if enabled for this sheet
+        ...(indexColumnSheets.includes(sheet.sheetName)
+          ? [{
+            title: '#',
+            field: '__rowIndex',
+            width: 50,
+            hozAlign: 'center',
+            headerSort: false,
+            formatter: (cell: unknown) => {
+              // Tabulator rows are 0-based, display as 1-based
+              // @ts-expect-error Tabulator cell type
+              return String(cell.getRow().getData().__rowIndex ?? cell.getRow().getPosition());
+            },
+            frozen: true,
+          }]
+          : []),
         ...sheet.columns.map((col: ExcelColumn, colIdx: number) => {
           // Get distinct values for dropdown
           const distinctValues = Array.from(new Set(sheet.rows.map((row: (string | number | null)[]) => row[colIdx]).filter((v: string | number | null) => v !== undefined && v !== null && v !== '')));
@@ -510,6 +530,9 @@ export default function ExcelReaderPage() {
     setTypeChangeDialog({ open: false, sheetName: '', colIdx: -1, newType: '' });
   };
 
+  // Prop to control index column visibility per sheet
+  const [indexColumnSheets, setIndexColumnSheets] = useState<string[]>([]);
+
   return (
     <div className="space-y-4">
       {/* Always show upload section with loading prop */}
@@ -533,7 +556,10 @@ export default function ExcelReaderPage() {
               <CardTitle className="text-base">Upload Excel</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 p-4 pt-0">
-              <ExcelToolbar />
+              <ExcelToolbar
+                indexColumnSheets={indexColumnSheets}
+                setIndexColumnSheets={setIndexColumnSheets}
+              />
               {workbook && workbook.sheets.length > 0 && (
                 <SheetTabs
                   workbook={workbook}
