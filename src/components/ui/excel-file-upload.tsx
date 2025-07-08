@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { UploadCloud } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface ExcelFileUploadProps {
     onFileSelect: (file: File) => void;
@@ -49,7 +50,7 @@ export function ExcelFileUpload({ onFileSelect, disabled }: ExcelFileUploadProps
                     >
                         Browse files
                     </Button>
-                    <input
+                    <Input
                         ref={inputRef}
                         type="file"
                         accept=".xlsx"

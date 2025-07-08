@@ -11,58 +11,7 @@ import { DropdownManageDialog } from '@/components/ui/dropdown-manage-dialog';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useExcelStore } from '@/store/excelStore';
 import type { ExcelSheet, ExcelColumn } from '@/lib/api/models/excel-workbook.model';
-import { Switch } from '@/components/ui/switch';
-import * as ReactDOM from 'react-dom/client';
-import ReactDOMServer from 'react-dom/server';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-
-// Custom Tabulator boolean editor using shadcn Switch
-function shadcnBooleanEditor(
-  cell: { getValue: () => unknown },
-  onRendered: () => void,
-  success: (value: boolean) => void
-): HTMLElement {
-  const container = document.createElement('div');
-  container.style.display = 'flex';
-  container.style.justifyContent = 'center';
-  container.style.alignItems = 'center';
-  const root = ReactDOM.createRoot(container);
-  const initial = cell.getValue() === true || cell.getValue() === 'true' || cell.getValue() === 1;
-  root.render(
-    <Switch
-      checked={initial}
-      onCheckedChange={val => {
-        success(!!val);
-      }}
-      className="mx-auto"
-      tabIndex={0}
-      autoFocus
-    />
-  );
-  onRendered();
-  return container;
-}
-
-// Custom Tabulator boolean formatter using shadcn Switch (display only)
-function shadcnBooleanFormatter(cell: { getValue: () => unknown }): HTMLElement {
-  const value = cell.getValue();
-  const container = document.createElement('div');
-  container.style.display = 'flex';
-  container.style.justifyContent = 'center';
-  container.style.alignItems = 'center';
-  const root = ReactDOM.createRoot(container);
-  root.render(
-    <Switch
-      checked={value === true || value === 'true' || value === 1}
-      disabled={true}
-      className="mx-auto opacity-70 pointer-events-none"
-      tabIndex={-1}
-    />
-  );
-  return container;
-}
+import { shadcnBooleanEditor, shadcnBooleanFormatter, menuLabel, removeBlankRows, convertValue, TypeChangeDialog, ColumnActionDialog } from './ExcelReader/index';
 
 export default function ExcelReaderPage() {
   const {
@@ -125,24 +74,6 @@ export default function ExcelReaderPage() {
       toast.error("Failed to read Excel file.");
     }
   };
-
-  // Utility: Remove blank rows based on required column keys
-  function removeBlankRows(
-    rows: (string | number | null)[][],
-    columns: ExcelColumn[],
-    requiredKeys: string[]
-  ): (string | number | null)[][] {
-    const keyIndexes = requiredKeys.map(
-      (key) => columns.findIndex((col: ExcelColumn) => col.name === key)
-    );
-    // Only consider a row blank if ALL required keys are blank
-    return rows.filter((row: (string | number | null)[]) =>
-      keyIndexes.some((idx: number) => {
-        const val = row[idx];
-        return val !== undefined && val !== null && String(val).trim() !== "";
-      })
-    );
-  }
 
   // Remove a specific row by index from a sheet
   const handleDeleteRow = (sheetName: string, rowIdx: number) => {
@@ -235,26 +166,7 @@ export default function ExcelReaderPage() {
           let validator: ((cellValue: unknown) => boolean | string) | undefined = undefined;
           // Custom boolean formatter: always show Switch, disabled if not editMode
           if (col.dataType === "boolean") {
-            formatter = editMode
-              ? (cell: { getValue: () => unknown }) => {
-                // Use shadcn Switch, disabled if not editMode
-                const value = cell.getValue();
-                const container = document.createElement("div");
-                container.style.display = "flex";
-                container.style.justifyContent = "center";
-                container.style.alignItems = "center";
-                const root = ReactDOM.createRoot(container);
-                root.render(
-                  <Switch
-                    checked={value === true || value === "true" || value === 1}
-                    onCheckedChange={() => { }}
-                    disabled={!editMode}
-                    className="mx-auto"
-                  />
-                );
-                return container;
-              }
-              : shadcnBooleanFormatter;
+            formatter = shadcnBooleanFormatter;
           }
           if (editMode) {
             switch (col.dataType) {
@@ -514,161 +426,6 @@ export default function ExcelReaderPage() {
     }
   };
 
-  // Helper to convert value to new type (moved to component scope)
-  function convertValue(val: unknown, type: string): string | number | null {
-    // Handle null/undefined up front
-    if (val === null || val === undefined) {
-      switch (type) {
-        case "number": return val === null ? 0 : NaN;
-        case "boolean": return 0;
-        case "string": return "";
-        case "date": return null;
-        case "datetime": return null;
-        case "time": return null;
-        default: return null;
-      }
-    }
-    // Handle arrays/objects
-    if (Array.isArray(val)) {
-      switch (type) {
-        case "boolean": return 1;
-        case "number": return val.length === 0 ? 0 : val.length === 1 ? Number(val[0]) : NaN;
-        case "string": return val.toString();
-        default: return null;
-      }
-    }
-    if (typeof val === "object" && !(val instanceof Date)) {
-      switch (type) {
-        case "boolean": return 1;
-        case "number": return NaN;
-        case "string": return "[object Object]";
-        default: return null;
-      }
-    }
-    // Handle Date
-    if (val instanceof Date) {
-      switch (type) {
-        case "number": return val.getTime();
-        case "string": return val.toString();
-        case "boolean": return 1;
-        default: return null;
-      }
-    }
-    // Handle primitives
-    switch (type) {
-      case "number": {
-        if (typeof val === "number") return val;
-        if (typeof val === "boolean") return val ? 1 : 0;
-        if (typeof val === "string") {
-          const n = Number(val);
-          if (!isNaN(n)) return n;
-          // Try Date fallback
-          const d = new Date(val as string);
-          return isNaN(d.getTime()) ? NaN : d.getTime();
-        }
-        return NaN;
-      }
-      case "boolean": {
-        if (typeof val === "boolean") return val ? 1 : 0;
-        if (typeof val === "number") return val !== 0 && !isNaN(val) ? 1 : 0;
-        if (typeof val === "string") {
-          if (val === "") return 0;
-          if (val === "false") return 0;
-          if (val === "true") return 1;
-          return 1; // any non-empty string is true
-        }
-        return 0;
-      }
-      case "string": {
-        if (typeof val === "string") return val;
-        if (typeof val === "number" || typeof val === "boolean" || val === null || val === undefined) return String(val);
-        if (val instanceof Date) return val.toString();
-        if (Array.isArray(val)) return val.toString();
-        if (typeof val === "object") return "[object Object]";
-        return String(val);
-      }
-      case "date": {
-        // Define a type for window.luxon.DateTime
-        type LuxonDateTime = {
-          fromJSDate: (date: Date) => { isValid: boolean; toFormat: (fmt: string) => string; toISO: (opts?: object) => string | null };
-        };
-        type WindowWithLuxon = typeof window & { luxon?: { DateTime?: LuxonDateTime } };
-        const { DateTime } = (window as WindowWithLuxon).luxon || {};
-        if (DateTime) {
-          const dt = DateTime.fromJSDate(new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : ''));
-          return dt.isValid ? dt.toFormat("yyyy-MM-dd") : null;
-        }
-        const d = new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : '');
-        return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
-      }
-      case "datetime": {
-        type LuxonDateTime = {
-          fromJSDate: (date: Date) => { isValid: boolean; toFormat: (fmt: string) => string; toISO: (opts?: object) => string | null };
-        };
-        type WindowWithLuxon = typeof window & { luxon?: { DateTime?: LuxonDateTime } };
-        const { DateTime } = (window as WindowWithLuxon).luxon || {};
-        if (DateTime) {
-          const dt = DateTime.fromJSDate(new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : ''));
-          return dt.isValid ? dt.toISO({ suppressMilliseconds: true }) : null;
-        }
-        const d = new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : '');
-        return isNaN(d.getTime()) ? null : d.toISOString();
-      }
-      case "time": {
-        type LuxonDateTime = {
-          fromJSDate: (date: Date) => { isValid: boolean; toFormat: (fmt: string) => string; toISO: (opts?: object) => string | null };
-        };
-        type WindowWithLuxon = typeof window & { luxon?: { DateTime?: LuxonDateTime } };
-        const { DateTime } = (window as WindowWithLuxon).luxon || {};
-        if (DateTime) {
-          const dt = DateTime.fromJSDate(new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : ''));
-          return dt.isValid ? dt.toFormat("HH:mm:ss") : null;
-        }
-        const d = new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : '');
-        return isNaN(d.getTime()) ? null : d.toISOString().slice(11, 19);
-      }
-      default:
-        return null;
-    }
-  }
-
-  // Handler for confirming type change
-  const handleConfirmTypeChange = () => {
-    const { sheetName, colIdx, newType } = typeChangeDialog;
-    if (!workbook || !sheetName || colIdx < 0) return;
-    useExcelStore.getState().setWorkbook({
-      ...workbook,
-      sheets: workbook.sheets.map(s =>
-        s.sheetName === sheetName
-          ? {
-            ...s,
-            columns: s.columns.map((c, i) => i === colIdx ? { ...c, dataType: newType } : c),
-            rows: s.rows.map(row =>
-              row.map((cell, i) => {
-                if (i !== colIdx) return cell;
-                // Always attempt conversion, set to null if not valid
-                const converted = convertValue(cell, newType);
-                // For number: null if NaN; for boolean: 1/0; for date/time: string or null
-                if (newType === "number" && (converted === null || isNaN(Number(converted)))) return null;
-                if (newType === "boolean" && !(converted === 1 || converted === 0)) return null;
-                if (newType === "date" && (typeof converted !== 'string' || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(String(converted)))) return null;
-                if (newType === "datetime" && (typeof converted !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/.test(String(converted)))) return null;
-                if (newType === "time" && (typeof converted !== 'string' || !/^\d{2}:\d{2}(:\d{2})?$/.test(String(converted)))) return null;
-                return converted;
-              })
-            ),
-          }
-          : s
-      ),
-    });
-    setTypeChangeDialog({ open: false, sheetName: '', colIdx: -1, newType: '' });
-  };
-
-  // Handler for canceling type change
-  const handleCancelTypeChange = () => {
-    setTypeChangeDialog({ open: false, sheetName: '', colIdx: -1, newType: '' });
-  };
-
   // Open dialog helpers
   const openReplaceNullsDialog = (sheetName: string, colIdx: number) => {
     setColActionDialog({ open: true, type: 'replaceNulls', sheetName, colIdx });
@@ -718,6 +475,39 @@ export default function ExcelReaderPage() {
     });
     useExcelStore.getState().setWorkbook({ ...workbook, sheets: updatedSheets });
     setColActionDialog({ open: false, type: '', sheetName: '', colIdx: -1 });
+  };
+
+  const handleConfirmTypeChange = () => {
+    const { sheetName, colIdx, newType } = typeChangeDialog;
+    if (!workbook || !sheetName || colIdx < 0) return;
+    useExcelStore.getState().setWorkbook({
+      ...workbook,
+      sheets: workbook.sheets.map(s =>
+        s.sheetName === sheetName
+          ? {
+            ...s,
+            columns: s.columns.map((c, i) => i === colIdx ? { ...c, dataType: newType } : c),
+            rows: s.rows.map(row =>
+              row.map((cell, i) => {
+                if (i !== colIdx) return cell;
+                const converted = convertValue(cell, newType);
+                if (newType === "number" && (converted === null || isNaN(Number(converted)))) return null;
+                if (newType === "boolean" && !(converted === 1 || converted === 0)) return null;
+                if (newType === "date" && (typeof converted !== 'string' || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(String(converted)))) return null;
+                if (newType === "datetime" && (typeof converted !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/.test(String(converted)))) return null;
+                if (newType === "time" && (typeof converted !== 'string' || !/^\d{2}:\d{2}(:\d{2})?$/.test(String(converted)))) return null;
+                return converted;
+              })
+            ),
+          }
+          : s
+      ),
+    });
+    setTypeChangeDialog({ open: false, sheetName: '', colIdx: -1, newType: '' });
+  };
+
+  const handleCancelTypeChange = () => {
+    setTypeChangeDialog({ open: false, sheetName: '', colIdx: -1, newType: '' });
   };
 
   return (
@@ -774,77 +564,25 @@ export default function ExcelReaderPage() {
             onAdd={handleAddDropdownValue}
             onRemove={handleRemoveDropdownValue}
           />
-          {typeChangeDialog.open && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-              <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-                <div className="font-semibold text-lg mb-2">Change Data Type</div>
-                <div className="mb-4 text-gray-700">
-                  Some cells in this column do not match the new data type.<br />
-                  These cells will be <span className="font-semibold text-red-600">cleared</span> if you continue.<br />
-                  Continue with data type change?
-                </div>
-                <div className="flex justify-end gap-2">
-                  <button className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" onClick={handleCancelTypeChange}>Cancel</button>
-                  <button className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" onClick={handleConfirmTypeChange}>Continue</button>
-                </div>
-              </div>
-            </div>
-          )}
-          {/* Column Action Dialog (shadcn/ui) */}
-          <Dialog open={colActionDialog.open} onOpenChange={open => setColActionDialog(d => ({ ...d, open }))}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {colActionDialog.type === 'replaceNulls' && 'Replace Null/Empty Values'}
-                  {colActionDialog.type === 'replaceErrors' && 'Replace Error Values'}
-                  {colActionDialog.type === 'findReplace' && 'Find and Replace'}
-                </DialogTitle>
-              </DialogHeader>
-              <div className="py-2">
-                {colActionDialog.type === 'findReplace' ? (
-                  <>
-                    <Input
-                      autoFocus
-                      placeholder="Find value"
-                      value={colActionFind}
-                      onChange={e => setColActionFind(e.target.value)}
-                      className="mb-2"
-                    />
-                    <Input
-                      placeholder="Replace with"
-                      value={colActionReplace}
-                      onChange={e => setColActionReplace(e.target.value)}
-                    />
-                  </>
-                ) : (
-                  <Input
-                    autoFocus
-                    placeholder="Replacement value"
-                    value={colActionValue}
-                    onChange={e => setColActionValue(e.target.value)}
-                  />
-                )}
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setColActionDialog(d => ({ ...d, open: false }))}>Cancel</Button>
-                <Button onClick={handleColActionConfirm} disabled={colActionDialog.type === 'findReplace' ? (!colActionFind || !colActionReplace) : !colActionValue}>
-                  {colActionDialog.type === 'findReplace' ? 'Replace' : 'Apply'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <TypeChangeDialog
+            open={typeChangeDialog.open}
+            onCancel={handleCancelTypeChange}
+            onConfirm={handleConfirmTypeChange}
+          />
+          <ColumnActionDialog
+            open={colActionDialog.open}
+            type={colActionDialog.type as 'replaceNulls' | 'replaceErrors' | 'findReplace' | ''}
+            value={colActionValue}
+            find={colActionFind}
+            replace={colActionReplace}
+            onValueChange={setColActionValue}
+            onFindChange={setColActionFind}
+            onReplaceChange={setColActionReplace}
+            onCancel={() => setColActionDialog(d => ({ ...d, open: false }))}
+            onConfirm={handleColActionConfirm}
+          />
         </>
       )}
     </div>
-  );
-}
-
-// Helper to render Lucide React icon + label as HTML string for Tabulator
-function menuLabel(Icon: React.ElementType, text: string) {
-  return ReactDOMServer.renderToStaticMarkup(
-    <span className="inline-flex items-center gap-2">
-      <Icon size={16} strokeWidth={1.8} className="mr-1 min-w-[16px]" />
-      <span>{text}</span>
-    </span>
   );
 }

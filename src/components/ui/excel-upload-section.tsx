@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from '@/components/ui/button';
 import { UploadCloud, FileCheck2, RotateCcw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface ExcelUploadSectionProps {
     loading: boolean;
@@ -52,7 +53,7 @@ export function ExcelUploadSection({ loading, onRead }: ExcelUploadSectionProps)
                         <span className="font-medium text-center text-base mb-1">
                             Drag and drop or <span className="font-semibold underline">choose files</span> to upload
                         </span>
-                        <input
+                        <Input
                             id="excel-upload-input"
                             type="file"
                             accept=".xlsx"
