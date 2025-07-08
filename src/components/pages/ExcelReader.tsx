@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import "tabulator-tables/dist/css/tabulator.min.css";
-import { FileSpreadsheet, Pencil, ChevronDown, Type, List, Eraser, XCircle, Replace, ListCollapse, Hash, Check, Calendar, Clock } from 'lucide-react';
+import { FileSpreadsheet, Pencil, Type, List, Eraser, XCircle, Replace, ListCollapse, Hash, Check, Calendar, Clock } from 'lucide-react';
 import { toast } from "sonner";
 import { ExcelToolbar } from '@/components/ui/excel-toolbar';
 import { ExcelUploadSection } from '@/components/ui/excel-upload-section';
@@ -22,8 +22,7 @@ import { Button } from '@/components/ui/button';
 function shadcnBooleanEditor(
   cell: { getValue: () => unknown },
   onRendered: () => void,
-  success: (value: boolean) => void,
-  _cancel: () => void
+  success: (value: boolean) => void
 ): HTMLElement {
   const container = document.createElement('div');
   container.style.display = 'flex';
@@ -71,9 +70,10 @@ export default function ExcelReaderPage() {
     activeSheet, setActiveSheet,
     editMode,
     renameDialogOpen, setRenameDialogOpen,
-    renameSheet, setRenameColIdx,
-    renameCurrent, setRenameValue,
-    renameValue,
+    renameSheet, setRenameSheet,
+    renameColIdx, setRenameColIdx,
+    renameCurrent, setRenameCurrent,
+    renameValue, setRenameValue,
     columnDropdowns, setColumnDropdown,
     customDropdownValues, setCustomDropdownValues,
   } = useExcelStore();
@@ -117,9 +117,9 @@ export default function ExcelReaderPage() {
       const result = await readExcel(file);
       console.log("[ExcelReader] readExcel result:", result);
       if (!result || !result.sheets || result.sheets.length === 0) {
-        toast.warning("No data found in the uploaded Excel file.");
+        toast.error("No valid sheets found in the imported Excel file.");
       } else {
-        toast.success("Excel file loaded successfully.");
+        toast.success("Excel file imported successfully.");
       }
     } catch {
       toast.error("Failed to read Excel file.");
@@ -588,7 +588,12 @@ export default function ExcelReaderPage() {
         return String(val);
       }
       case "date": {
-        const { DateTime } = (window as any).luxon || {};
+        // Define a type for window.luxon.DateTime
+        type LuxonDateTime = {
+          fromJSDate: (date: Date) => { isValid: boolean; toFormat: (fmt: string) => string; toISO: (opts?: object) => string | null };
+        };
+        type WindowWithLuxon = typeof window & { luxon?: { DateTime?: LuxonDateTime } };
+        const { DateTime } = (window as WindowWithLuxon).luxon || {};
         if (DateTime) {
           const dt = DateTime.fromJSDate(new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : ''));
           return dt.isValid ? dt.toFormat("yyyy-MM-dd") : null;
@@ -597,7 +602,11 @@ export default function ExcelReaderPage() {
         return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
       }
       case "datetime": {
-        const { DateTime } = (window as any).luxon || {};
+        type LuxonDateTime = {
+          fromJSDate: (date: Date) => { isValid: boolean; toFormat: (fmt: string) => string; toISO: (opts?: object) => string | null };
+        };
+        type WindowWithLuxon = typeof window & { luxon?: { DateTime?: LuxonDateTime } };
+        const { DateTime } = (window as WindowWithLuxon).luxon || {};
         if (DateTime) {
           const dt = DateTime.fromJSDate(new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : ''));
           return dt.isValid ? dt.toISO({ suppressMilliseconds: true }) : null;
@@ -606,7 +615,11 @@ export default function ExcelReaderPage() {
         return isNaN(d.getTime()) ? null : d.toISOString();
       }
       case "time": {
-        const { DateTime } = (window as any).luxon || {};
+        type LuxonDateTime = {
+          fromJSDate: (date: Date) => { isValid: boolean; toFormat: (fmt: string) => string; toISO: (opts?: object) => string | null };
+        };
+        type WindowWithLuxon = typeof window & { luxon?: { DateTime?: LuxonDateTime } };
+        const { DateTime } = (window as WindowWithLuxon).luxon || {};
         if (DateTime) {
           const dt = DateTime.fromJSDate(new Date(typeof val === 'string' || typeof val === 'number' || val instanceof Date ? val : ''));
           return dt.isValid ? dt.toFormat("HH:mm:ss") : null;
@@ -630,18 +643,20 @@ export default function ExcelReaderPage() {
           ? {
             ...s,
             columns: s.columns.map((c, i) => i === colIdx ? { ...c, dataType: newType } : c),
-            rows: s.rows.map(row => row.map((cell, i) => {
-              if (i !== colIdx) return cell;
-              // Always attempt conversion, set to null if not valid
-              const converted = convertValue(cell, newType);
-              // For number: null if NaN; for boolean: 1/0; for date/time: string or null
-              if (newType === "number" && (converted === null || isNaN(Number(converted)))) return null;
-              if (newType === "boolean" && !(converted === 1 || converted === 0)) return null;
-              if (newType === "date" && (typeof converted !== 'string' || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(String(converted)))) return null;
-              if (newType === "datetime" && (typeof converted !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/.test(String(converted)))) return null;
-              if (newType === "time" && (typeof converted !== 'string' || !/^\d{2}:\d{2}(:\d{2})?$/.test(String(converted)))) return null;
-              return converted;
-            })) as (string | number | null)[],
+            rows: s.rows.map(row =>
+              row.map((cell, i) => {
+                if (i !== colIdx) return cell;
+                // Always attempt conversion, set to null if not valid
+                const converted = convertValue(cell, newType);
+                // For number: null if NaN; for boolean: 1/0; for date/time: string or null
+                if (newType === "number" && (converted === null || isNaN(Number(converted)))) return null;
+                if (newType === "boolean" && !(converted === 1 || converted === 0)) return null;
+                if (newType === "date" && (typeof converted !== 'string' || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(String(converted)))) return null;
+                if (newType === "datetime" && (typeof converted !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/.test(String(converted)))) return null;
+                if (newType === "time" && (typeof converted !== 'string' || !/^\d{2}:\d{2}(:\d{2})?$/.test(String(converted)))) return null;
+                return converted;
+              })
+            ),
           }
           : s
       ),
@@ -707,107 +722,119 @@ export default function ExcelReaderPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-2xl font-bold mb-4">
-        <FileSpreadsheet className="w-6 h-6" />
-        Excel Reader
-      </div>
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Upload Excel</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 p-4 pt-0">
-          <ExcelToolbar />
-          {/* Compact upload section extracted as a component */}
-          <ExcelUploadSection loading={loading} onRead={handleFileRead} />
-          {workbook && workbook.sheets.length > 0 && (
-            <SheetTabs
-              workbook={workbook}
-              activeSheet={activeSheet}
-              setActiveSheet={setActiveSheet}
-              getTableRef={getTableRef}
-            />
-          )}
-          {(!workbook || !workbook.sheets || workbook.sheets.length === 0) && !loading && (
-            <div className="text-center text-gray-500 py-8">No data to display. Please upload an Excel file.</div>
-          )}
-        </CardContent>
-      </Card>
-      <RenameColumnDialog
-        open={renameDialogOpen}
-        onOpenChange={setRenameDialogOpen}
-        value={renameValue}
-        onValueChange={setRenameValue}
-        current={renameCurrent}
-        onConfirm={handleRenameConfirm}
-      />
-      <DropdownManageDialog
-        open={dropdownDialogOpen}
-        onOpenChange={setDropdownDialogOpen}
-        input={dropdownInput}
-        onInputChange={setDropdownInput}
-        values={dropdownSheet && dropdownColIdx !== null ? (customDropdownValues[dropdownSheet]?.[dropdownColIdx] || []) : []}
-        onAdd={handleAddDropdownValue}
-        onRemove={handleRemoveDropdownValue}
-      />
-      {typeChangeDialog.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
-            <div className="font-semibold text-lg mb-2">Change Data Type</div>
-            <div className="mb-4 text-gray-700">
-              Some cells in this column do not match the new data type.<br />
-              These cells will be <span className="font-semibold text-red-600">cleared</span> if you continue.<br />
-              Continue with data type change?
-            </div>
-            <div className="flex justify-end gap-2">
-              <button className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" onClick={handleCancelTypeChange}>Cancel</button>
-              <button className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" onClick={handleConfirmTypeChange}>Continue</button>
-            </div>
-          </div>
+      {/* Always show upload section with loading prop */}
+      <ExcelUploadSection onRead={handleFileRead} loading={loading} />
+      {/* Show a message if no workbook is loaded */}
+      {!workbook && (
+        <div className="text-center text-muted-foreground py-12">
+          <p className="text-lg font-semibold">No Excel workbook loaded</p>
+          <p className="text-sm">Please upload an Excel file to begin.</p>
         </div>
       )}
-      {/* Column Action Dialog (shadcn/ui) */}
-      <Dialog open={colActionDialog.open} onOpenChange={open => setColActionDialog(d => ({ ...d, open }))}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {colActionDialog.type === 'replaceNulls' && 'Replace Null/Empty Values'}
-              {colActionDialog.type === 'replaceErrors' && 'Replace Error Values'}
-              {colActionDialog.type === 'findReplace' && 'Find and Replace'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            {colActionDialog.type === 'findReplace' ? (
-              <>
-                <Input
-                  autoFocus
-                  placeholder="Find value"
-                  value={colActionFind}
-                  onChange={e => setColActionFind(e.target.value)}
-                  className="mb-2"
-                />
-                <Input
-                  placeholder="Replace with"
-                  value={colActionReplace}
-                  onChange={e => setColActionReplace(e.target.value)}
-                />
-              </>
-            ) : (
-              <Input
-                autoFocus
-                placeholder="Replacement value"
-                value={colActionValue}
-                onChange={e => setColActionValue(e.target.value)}
-              />
-            )}
+      {/* Only render workbook-dependent UI if workbook is present */}
+      {workbook && (
+        <>
+          <div className="flex items-center gap-2 text-2xl font-bold mb-4">
+            <FileSpreadsheet className="w-6 h-6" />
+            Excel Reader
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setColActionDialog(d => ({ ...d, open: false }))}>Cancel</Button>
-            <Button onClick={handleColActionConfirm} disabled={colActionDialog.type === 'findReplace' ? (!colActionFind || !colActionReplace) : !colActionValue}>
-              {colActionDialog.type === 'findReplace' ? 'Replace' : 'Apply'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Upload Excel</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 p-4 pt-0">
+              <ExcelToolbar />
+              {workbook && workbook.sheets.length > 0 && (
+                <SheetTabs
+                  workbook={workbook}
+                  activeSheet={activeSheet}
+                  setActiveSheet={setActiveSheet}
+                  getTableRef={getTableRef}
+                />
+              )}
+              {(!workbook || !workbook.sheets || workbook.sheets.length === 0) && !loading && (
+                <div className="text-center text-gray-500 py-8">No data to display. Please upload an Excel file.</div>
+              )}
+            </CardContent>
+          </Card>
+          <RenameColumnDialog
+            open={renameDialogOpen}
+            onOpenChange={setRenameDialogOpen}
+            value={renameValue}
+            onValueChange={setRenameValue}
+            current={renameCurrent}
+            onConfirm={handleRenameConfirm}
+          />
+          <DropdownManageDialog
+            open={dropdownDialogOpen}
+            onOpenChange={setDropdownDialogOpen}
+            input={dropdownInput}
+            onInputChange={setDropdownInput}
+            values={dropdownSheet && dropdownColIdx !== null ? (customDropdownValues[dropdownSheet]?.[dropdownColIdx] || []) : []}
+            onAdd={handleAddDropdownValue}
+            onRemove={handleRemoveDropdownValue}
+          />
+          {typeChangeDialog.open && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+                <div className="font-semibold text-lg mb-2">Change Data Type</div>
+                <div className="mb-4 text-gray-700">
+                  Some cells in this column do not match the new data type.<br />
+                  These cells will be <span className="font-semibold text-red-600">cleared</span> if you continue.<br />
+                  Continue with data type change?
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300" onClick={handleCancelTypeChange}>Cancel</button>
+                  <button className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" onClick={handleConfirmTypeChange}>Continue</button>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Column Action Dialog (shadcn/ui) */}
+          <Dialog open={colActionDialog.open} onOpenChange={open => setColActionDialog(d => ({ ...d, open }))}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {colActionDialog.type === 'replaceNulls' && 'Replace Null/Empty Values'}
+                  {colActionDialog.type === 'replaceErrors' && 'Replace Error Values'}
+                  {colActionDialog.type === 'findReplace' && 'Find and Replace'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="py-2">
+                {colActionDialog.type === 'findReplace' ? (
+                  <>
+                    <Input
+                      autoFocus
+                      placeholder="Find value"
+                      value={colActionFind}
+                      onChange={e => setColActionFind(e.target.value)}
+                      className="mb-2"
+                    />
+                    <Input
+                      placeholder="Replace with"
+                      value={colActionReplace}
+                      onChange={e => setColActionReplace(e.target.value)}
+                    />
+                  </>
+                ) : (
+                  <Input
+                    autoFocus
+                    placeholder="Replacement value"
+                    value={colActionValue}
+                    onChange={e => setColActionValue(e.target.value)}
+                  />
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setColActionDialog(d => ({ ...d, open: false }))}>Cancel</Button>
+                <Button onClick={handleColActionConfirm} disabled={colActionDialog.type === 'findReplace' ? (!colActionFind || !colActionReplace) : !colActionValue}>
+                  {colActionDialog.type === 'findReplace' ? 'Replace' : 'Apply'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }
