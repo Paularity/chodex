@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { ExcelService } from "@/lib/api/excel/service";
-import type { ExcelWorkbook } from "@/lib/api/models/excel-workbook.model";
+import type { ExcelWorkbook, ExcelColumn } from "@/lib/api/models/excel-workbook.model";
 import { useAuthStore } from "./authStore";
 
 interface ExcelState {
@@ -14,6 +14,8 @@ interface ExcelState {
   renameCurrent: string;
   renameValue: string;
   columnDropdowns: Record<string, Record<number, boolean>>;
+  deleteColsDialog: { open: boolean; sheetName: string; selected: number[] };
+  multiTypeDialog: { open: boolean; sheetName: string; columns: ExcelColumn[] };
   setWorkbook: (wb: ExcelWorkbook | null) => void;
   setLoading: (loading: boolean) => void;
   setActiveSheet: (sheet: string | null) => void;
@@ -24,6 +26,8 @@ interface ExcelState {
   setRenameCurrent: (val: string) => void;
   setRenameValue: (val: string) => void;
   setColumnDropdown: (sheet: string, colIdx: number, isDropdown: boolean) => void;
+  setDeleteColsDialog: (dialog: { open: boolean; sheetName: string; selected: number[] }) => void;
+  setMultiTypeDialog: (dialog: { open: boolean; sheetName: string; columns: ExcelColumn[] }) => void;
   readExcel: (file: File) => Promise<ExcelWorkbook | undefined>;
   renameColumn: (sheetName: string, colIdx: number, newName: string) => void;
   customDropdownValues: Record<string, Record<number, string[]>>;
@@ -42,6 +46,8 @@ export const useExcelStore = create<ExcelState>((set) => ({
   renameValue: "",
   columnDropdowns: {},
   customDropdownValues: {},
+  deleteColsDialog: { open: false, sheetName: '', selected: [] },
+  multiTypeDialog: { open: false, sheetName: '', columns: [] },
   setWorkbook: (wb) => set({ workbook: wb }),
   setLoading: (loading) => set({ loading }),
   setActiveSheet: (sheet) => set({ activeSheet: sheet }),
@@ -73,6 +79,8 @@ export const useExcelStore = create<ExcelState>((set) => ({
       };
     });
   },
+  setDeleteColsDialog: (dialog) => set({ deleteColsDialog: dialog }),
+  setMultiTypeDialog: (dialog) => set({ multiTypeDialog: dialog }),
   readExcel: async (file: File) => {
     set({ loading: true });
     try {

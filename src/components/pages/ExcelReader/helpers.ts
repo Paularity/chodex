@@ -75,10 +75,12 @@ export function convertValue(val: unknown, type: string): string | number | null
             if (typeof val === "number") return val;
             if (typeof val === "boolean") return val ? 1 : 0;
             if (typeof val === "string") {
+                // Try direct number conversion
                 const n = Number(val);
                 if (!isNaN(n)) return n;
-                const d = new Date(val as string);
-                return isNaN(d.getTime()) ? NaN : d.getTime();
+                // Try parsing as date
+                const d = new Date(val);
+                if (!isNaN(d.getTime())) return d.getTime();
             }
             return NaN;
         }
@@ -143,4 +145,15 @@ export function convertValue(val: unknown, type: string): string | number | null
         default:
             return null;
     }
+}
+
+// Converts a value to a new type, nulling if incompatible (matches header context menu logic)
+export function convertCellForTypeChange(val: unknown, newType: string): string | number | null {
+    const converted = convertValue(val, newType);
+    if (newType === "number" && !(typeof converted === "number" && !isNaN(converted))) return null;
+    if (newType === "boolean" && !(converted === 1 || converted === 0)) return null;
+    if (newType === "date" && (typeof converted !== 'string' || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(String(converted)))) return null;
+    if (newType === "datetime" && (typeof converted !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/.test(String(converted)))) return null;
+    if (newType === "time" && (typeof converted !== 'string' || !/^\d{2}:\d{2}(:\d{2})?$/.test(String(converted)))) return null;
+    return converted;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect } from "react";
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import "tabulator-tables/dist/css/tabulator.min.css";
@@ -11,7 +12,9 @@ import { DropdownManageDialog } from '@/components/ui/dropdown-manage-dialog';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useExcelStore } from '@/store/excelStore';
 import type { ExcelSheet, ExcelColumn } from '@/lib/api/models/excel-workbook.model';
-import { shadcnBooleanEditor, shadcnBooleanFormatter, menuLabel, removeBlankRows, convertValue, TypeChangeDialog, ColumnActionDialog } from './ExcelReader/index';
+import { shadcnBooleanEditor, shadcnBooleanFormatter, menuLabel, removeBlankRows, convertValue, convertCellForTypeChange, TypeChangeDialog, ColumnActionDialog } from './ExcelReader/index';
+import { DeleteMultipleColumnsDialog } from '@/components/ui/delete-multiple-columns-dialog';
+import { ChangeMultipleTypesDialog } from '@/components/ui/change-multiple-types-dialog';
 
 export default function ExcelReaderPage() {
   const {
@@ -25,7 +28,9 @@ export default function ExcelReaderPage() {
     renameValue, setRenameValue,
     columnDropdowns, setColumnDropdown,
     customDropdownValues, setCustomDropdownValues,
+    multiTypeDialog, setMultiTypeDialog, // <-- use from store
   } = useExcelStore();
+
   // Dropdown manage dialog state
   const [dropdownDialogOpen, setDropdownDialogOpen] = useState(false);
   const [dropdownSheet, setDropdownSheet] = useState<string | null>(null);
@@ -148,6 +153,20 @@ export default function ExcelReaderPage() {
     useExcelStore.getState().setWorkbook({ ...workbook, sheets: updatedSheets });
   };
 
+  // Handler to delete a column from a sheet
+  const handleDeleteColumn = (sheetName: string, colIdx: number) => {
+    if (!workbook) return;
+    const updatedSheets = workbook.sheets.map((sheet) => {
+      if (sheet.sheetName !== sheetName) return sheet;
+      return {
+        ...sheet,
+        columns: sheet.columns.filter((_, i) => i !== colIdx),
+        rows: sheet.rows.map(row => row.filter((_, i) => i !== colIdx)),
+      };
+    });
+    useExcelStore.getState().setWorkbook({ ...workbook, sheets: updatedSheets });
+  };
+
   // Callback ref to initialize Tabulator when container is mounted
   const getTableRef = (sheet: ExcelSheet, filtered: boolean) => (el: HTMLDivElement | null) => {
     if (!el || !workbook) return;
@@ -262,99 +281,107 @@ export default function ExcelReaderPage() {
               const coerced = convertValue(value, col.dataType);
               handleCellEdit(sheet.sheetName, rowIdx, colIdx, coerced);
             },
-            headerContextMenu: editMode ? [
-              {
-                label: menuLabel(ListCollapse, isDropdown ? "Use Text Input" : "Use Dropdown"),
-                action: () => setColumnDropdown(sheet.sheetName, colIdx, !isDropdown),
-              },
-              {
-                label: menuLabel(Pencil, "Rename Column"),
-                action: () => {
-                  openRenameDialog(sheet.sheetName, colIdx, col.name);
+            headerContextMenu: function () {
+              if (!editMode) {
+                toast.error("Enable edit mode to modify columns.");
+                return false; // Prevent menu from opening
+              }
+              return [
+                {
+                  label: menuLabel(ListCollapse, isDropdown ? "Use Text Input" : "Use Dropdown"),
+                  action: () => setColumnDropdown(sheet.sheetName, colIdx, !isDropdown),
                 },
-              },
-              {
-                label: menuLabel(Type, "Change Data Type"),
-                menu: [
-                  ...[
-                    { type: "string", icon: Type },
-                    { type: "number", icon: Hash },
-                    { type: "boolean", icon: Check },
-                    { type: "date", icon: Calendar },
-                    { type: "datetime", icon: Clock },
-                    { type: "time", icon: Clock },
-                  ].map(({ type, icon }) => ({
-                    label: menuLabel(icon, type.charAt(0).toUpperCase() + type.slice(1)),
-                    action: () => {
-                      // Helper to test if value is compatible with type
-                      const isCompatible = (val: unknown, type: string) => {
-                        if (val === null || val === "") return true;
-                        switch (type) {
-                          case "number":
-                            return !isNaN(Number(val));
-                          case "boolean":
-                            return (
-                              val === true || val === false || val === 1 || val === 0 || val === "true" || val === "false"
-                            );
-                          case "date":
-                            return /^\d{4}-\d{2}-\d{2}$/.test(String(val));
-                          case "datetime":
-                            return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/.test(String(val));
-                          case "time":
-                            return /^\d{2}:\d{2}(:\d{2})?$/.test(String(val));
-                          default:
-                            return true;
-                        }
-                      };
-                      // Check for mismatches
-                      const mismatches = sheet.rows
-                        .map((row, rIdx) => isCompatible(row[colIdx], type) ? null : rIdx)
-                        .filter(idx => idx !== null);
-                      if (mismatches.length > 0) {
-                        setTypeChangeDialog({ open: true, sheetName: sheet.sheetName, colIdx, newType: type });
-                      } else {
-                        // All values are compatible, convert them
-                        const newRows = sheet.rows.map(row => {
-                          const newRow = [...row];
-                          newRow[colIdx] = convertValue(row[colIdx], type);
-                          return newRow;
-                        });
-                        if (workbook) {
-                          useExcelStore.getState().setWorkbook({
-                            ...workbook,
-                            sheets: workbook.sheets.map(s =>
-                              s.sheetName === sheet.sheetName
-                                ? {
-                                  ...s,
-                                  columns: s.columns.map((c, i) => i === colIdx ? { ...c, dataType: type } : c),
-                                  rows: newRows as (string | number | null)[][],
-                                }
-                                : s
-                            ),
+                {
+                  label: menuLabel(Pencil, "Rename Column"),
+                  action: () => openRenameDialog(sheet.sheetName, colIdx, col.name),
+                },
+                {
+                  label: menuLabel(Type, "Change Data Type"),
+                  menu: [
+                    ...[
+                      { type: "string", icon: Type },
+                      { type: "number", icon: Hash },
+                      { type: "boolean", icon: Check },
+                      { type: "date", icon: Calendar },
+                      { type: "datetime", icon: Clock },
+                      { type: "time", icon: Clock },
+                    ].map(({ type, icon }) => ({
+                      label: menuLabel(icon, type.charAt(0).toUpperCase() + type.slice(1)),
+                      action: () => {
+                        // Helper to test if value is compatible with type
+                        const isCompatible = (val: unknown, type: string) => {
+                          if (val === null || val === "") return true;
+                          switch (type) {
+                            case "number":
+                              return !isNaN(Number(val));
+                            case "boolean":
+                              return (
+                                val === true || val === false || val === 1 || val === 0 || val === "true" || val === "false"
+                              );
+                            case "date":
+                              return /^\d{4}-\d{2}-\d{2}$/.test(String(val));
+                            case "datetime":
+                              return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/.test(String(val));
+                            case "time":
+                              return /^\d{2}:\d{2}(:\d{2})?$/.test(String(val));
+                            default:
+                              return true;
+                          }
+                        };
+                        // Check for mismatches
+                        const mismatches = sheet.rows
+                          .map((row, rIdx) => isCompatible(row[colIdx], type) ? null : rIdx)
+                          .filter(idx => idx !== null);
+                        if (mismatches.length > 0) {
+                          setTypeChangeDialog({ open: true, sheetName: sheet.sheetName, colIdx, newType: type });
+                        } else {
+                          // All values are compatible, convert them
+                          const newRows = sheet.rows.map(row => {
+                            const newRow = [...row];
+                            newRow[colIdx] = convertValue(row[colIdx], type);
+                            return newRow;
                           });
+                          if (workbook) {
+                            useExcelStore.getState().setWorkbook({
+                              ...workbook,
+                              sheets: workbook.sheets.map(s =>
+                                s.sheetName === sheet.sheetName
+                                  ? {
+                                    ...s,
+                                    columns: s.columns.map((c, i) => i === colIdx ? { ...c, dataType: type } : c),
+                                    rows: newRows as (string | number | null)[][],
+                                  }
+                                  : s
+                              ),
+                            });
+                          }
                         }
-                      }
-                    },
-                  })),
-                ],
-              },
-              ...(isDropdown ? [{
-                label: menuLabel(List, "Manage Dropdown Items"),
-                action: () => openDropdownDialog(sheet.sheetName, colIdx),
-              }] : []),
-              {
-                label: menuLabel(Eraser, "Replace Nulls"),
-                action: () => openReplaceNullsDialog(sheet.sheetName, colIdx),
-              },
-              {
-                label: menuLabel(XCircle, "Replace Errors"),
-                action: () => openReplaceErrorsDialog(sheet.sheetName, colIdx),
-              },
-              {
-                label: menuLabel(Replace, "Find and Replace"),
-                action: () => openFindReplaceDialog(sheet.sheetName, colIdx),
-              },
-            ] : undefined,
+                      },
+                    })),
+                  ],
+                },
+                ...(isDropdown ? [{
+                  label: menuLabel(List, "Manage Dropdown Items"),
+                  action: () => openDropdownDialog(sheet.sheetName, colIdx),
+                }] : []),
+                {
+                  label: menuLabel(Eraser, "Replace Nulls"),
+                  action: () => openReplaceNullsDialog(sheet.sheetName, colIdx),
+                },
+                {
+                  label: menuLabel(XCircle, "Replace Errors"),
+                  action: () => openReplaceErrorsDialog(sheet.sheetName, colIdx),
+                },
+                {
+                  label: menuLabel(Replace, "Find and Replace"),
+                  action: () => openFindReplaceDialog(sheet.sheetName, colIdx),
+                },
+                {
+                  label: menuLabel(XCircle, 'Delete Column'),
+                  action: () => handleDeleteColumn(sheet.sheetName, colIdx),
+                },
+              ];
+            },
           };
         }),
       ];
@@ -363,6 +390,13 @@ export default function ExcelReaderPage() {
         : sheet.rows;
       const data = dataRows.map((row: (string | number | null)[], idx: number) => {
         const obj: Record<string, string | number | null> = {};
+        // Add key/index columns if present
+        if (row && typeof row === 'object' && '__rowKey' in row) {
+          obj['__rowKey'] = (row as any)['__rowKey'];
+        }
+        if (row && typeof row === 'object' && '__rowIndex' in row) {
+          obj['__rowIndex'] = (row as any)['__rowIndex'];
+        }
         sheet.columns.forEach((col: ExcelColumn, i: number) => {
           obj[col.name] = row[i];
         });
@@ -497,6 +531,33 @@ export default function ExcelReaderPage() {
     setColActionDialog({ open: false, type: '', sheetName: '', colIdx: -1 });
   };
 
+  const handleMultiTypeConfirm = (changes: { colIdx: number; newType: string }[], cleanedRows?: (string | number | null)[][]) => {
+    if (!workbook || !multiTypeDialog.sheetName) return;
+    const updatedSheets = workbook.sheets.map(sheet => {
+      if (sheet.sheetName !== multiTypeDialog.sheetName) return sheet;
+      const newColumns = sheet.columns.map((col, idx) => {
+        const found = changes.find(c => c.colIdx === idx);
+        return found ? { ...col, dataType: found.newType } : col;
+      });
+      let newRows = sheet.rows;
+      if (cleanedRows) {
+        newRows = cleanedRows;
+      } else if (changes.length > 0) {
+        // If cleanedRows not provided, apply convertCellForTypeChange for each changed column
+        newRows = sheet.rows.map(row => {
+          const newRow = [...row];
+          changes.forEach(({ colIdx, newType }) => {
+            newRow[colIdx] = convertCellForTypeChange(row[colIdx], newType);
+          });
+          return newRow;
+        });
+      }
+      return { ...sheet, columns: newColumns, rows: newRows };
+    });
+    useExcelStore.getState().setWorkbook({ ...workbook, sheets: updatedSheets });
+    setMultiTypeDialog({ open: false, sheetName: '', columns: [] });
+  };
+
   const handleConfirmTypeChange = () => {
     const { sheetName, colIdx, newType } = typeChangeDialog;
     if (!workbook || !sheetName || colIdx < 0) return;
@@ -532,6 +593,8 @@ export default function ExcelReaderPage() {
 
   // Prop to control index column visibility per sheet
   const [indexColumnSheets, setIndexColumnSheets] = useState<string[]>([]);
+  // Prop to control key column (GUID) visibility per sheet
+  const [keyColumnSheets, setKeyColumnSheets] = useState<string[]>([]);
 
   // Show loading overlay when switching sheets
   const [sheetLoading, setSheetLoading] = useState(false);
@@ -633,7 +696,10 @@ export default function ExcelReaderPage() {
               <ExcelToolbar
                 indexColumnSheets={indexColumnSheets}
                 setIndexColumnSheets={setIndexColumnSheets}
+                keyColumnSheets={keyColumnSheets}
+                setKeyColumnSheets={setKeyColumnSheets}
                 onLoading={handleToolbarLoading}
+                onOpenChangeMultipleTypes={() => setMultiTypeDialog({ open: true, sheetName: activeSheet || '', columns: [] })}
               />
               {workbook && workbook.sheets.length > 0 && (
                 <div className="relative">
@@ -697,6 +763,14 @@ export default function ExcelReaderPage() {
             onReplaceChange={setColActionReplace}
             onCancel={() => setColActionDialog(d => ({ ...d, open: false }))}
             onConfirm={handleColActionConfirm}
+          />
+          {/* Delete Multiple Columns Dialog using shadcn/ui components */}
+          <DeleteMultipleColumnsDialog />
+          <ChangeMultipleTypesDialog
+            open={multiTypeDialog.open}
+            columns={multiTypeDialog.columns}
+            onClose={() => setMultiTypeDialog({ open: false, sheetName: '', columns: [] })}
+            onConfirm={handleMultiTypeConfirm}
           />
         </>
       )}
