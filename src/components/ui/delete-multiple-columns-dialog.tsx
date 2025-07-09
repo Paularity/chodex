@@ -48,37 +48,60 @@ export function DeleteMultipleColumnsDialog() {
         <Dialog open={deleteColsDialog.open} onOpenChange={open => setDeleteColsDialog(open ? deleteColsDialog : { open: false, sheetName: '', selected: [] })}>
             {deleteColsDialog.open && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl p-0 min-w-[340px] max-w-md w-full border border-gray-200 animate-fade-in-up relative">
+                    <div className="bg-white rounded-2xl shadow-2xl p-0 min-w-[340px] w-full max-w-2xl border border-gray-100 animate-fade-in-up relative flex flex-col h-[70vh] max-h-[90vh]">
                         {loading && (
                             <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center z-20 rounded-2xl animate-fade-in">
                                 <Trash2 className="w-8 h-8 text-red-600 animate-bounce mb-2" />
                                 <span className="text-black font-semibold text-base">Deleting columns...</span>
                             </div>
                         )}
-                        <div className="flex items-center gap-3 px-6 py-4 rounded-t-2xl bg-black border-b border-gray-100">
-                            <span className="inline-flex items-center justify-center rounded-full bg-white/20 p-2">
+                        <div className="flex items-center gap-3 px-8 py-5 rounded-t-2xl bg-gradient-to-r from-black via-gray-900 to-gray-800 border-b border-gray-200">
+                            <span className="inline-flex items-center justify-center rounded-full bg-white/10 p-2">
                                 <Trash2 className="w-6 h-6 text-white" />
                             </span>
-                            <span className="font-bold text-lg tracking-wide text-white">Delete Multiple Columns</span>
+                            <span className="font-bold text-xl tracking-wide text-white">Delete Multiple Columns</span>
                         </div>
-                        <div className="px-6 pt-4 pb-2">
-                            <div className="mb-2 text-sm text-gray-900 font-medium">
-                                <span className="text-black font-semibold">Warning:</span> This action will <span className="font-bold">permanently remove</span> the selected columns from <span className="font-bold text-black">{deleteColsDialog.sheetName}</span>.
+                        <div className="px-8 pt-6 pb-4 flex flex-col flex-1 min-h-0">
+                            <div className="mb-2 text-base text-gray-900 font-semibold flex items-center gap-2">
+                                <span className="text-red-600 font-bold">Warning:</span>
+                                <span>This action will <span className="font-bold">permanently remove</span> the selected columns from <span className="font-bold text-black">{deleteColsDialog.sheetName}</span>.</span>
                             </div>
                             <div className="mb-4 text-xs text-gray-500">Select columns to delete. This cannot be undone.</div>
-                            <div className="max-h-48 overflow-y-auto mb-4 space-y-1 pr-1">
+                            {/* Select All / Unselect All controls */}
+                            <div className="flex gap-2 mb-3">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="rounded-full px-4 py-1 text-xs font-semibold border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 shadow-sm"
+                                    onClick={() => {
+                                        const sheet = workbook?.sheets.find(s => s.sheetName === deleteColsDialog.sheetName);
+                                        if (!sheet) return;
+                                        setDeleteColsDialog({ ...deleteColsDialog, selected: sheet.columns.map((_, idx) => idx) });
+                                    }}
+                                    disabled={loading}
+                                >Select All</Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="rounded-full px-4 py-1 text-xs font-semibold border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 shadow-sm"
+                                    onClick={() => setDeleteColsDialog({ ...deleteColsDialog, selected: [] })}
+                                    disabled={loading}
+                                >Unselect All</Button>
+                            </div>
+                            <div className="flex-1 min-h-0 max-h-full overflow-y-auto mb-4 pr-1 rounded-lg border border-gray-100 bg-gray-50">
                                 {workbook?.sheets.find(s => s.sheetName === deleteColsDialog.sheetName)?.columns.map((col, idx) => (
                                     <label
                                         key={idx}
-                                        className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer transition hover:bg-gray-100 focus-within:bg-gray-200 ${deleteColsDialog.selected.includes(idx) ? 'bg-gray-100' : ''}`}
+                                        className={`flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer transition hover:bg-gray-100 focus-within:bg-gray-200 ${deleteColsDialog.selected.includes(idx) ? 'bg-white border border-gray-200' : ''}`}
                                     >
                                         <Checkbox
                                             checked={deleteColsDialog.selected.includes(idx)}
                                             onCheckedChange={checked => handleChange(idx, !!checked)}
                                             id={`delete-col-checkbox-${idx}`}
                                             disabled={loading}
+                                            className="scale-105 border-gray-300 focus:ring-1 focus:ring-black"
                                         />
-                                        <span className="text-sm font-medium text-gray-900">{col.name}</span>
+                                        <span className="text-sm text-gray-900 truncate" title={col.name}>{col.name}</span>
                                     </label>
                                 ))}
                             </div>
@@ -95,9 +118,8 @@ export function DeleteMultipleColumnsDialog() {
                                     disabled={deleteColsDialog.selected.length === 0 || loading}
                                     onClick={handleDelete}
                                     type="button"
-                                    className="rounded-full px-5 py-2 font-semibold shadow-lg bg-white text-black border border-gray-300 hover:bg-gray-100 transition flex items-center gap-2"
+                                    className="rounded-full px-5 py-2 font-semibold shadow-lg bg-white text-black border border-gray-300 hover:bg-gray-100 transition"
                                 >
-                                    <Trash2 className="w-4 h-4 mr-1" />
                                     Delete
                                 </Button>
                             </div>
