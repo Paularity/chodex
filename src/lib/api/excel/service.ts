@@ -20,21 +20,16 @@ export const ExcelService = {
     const response = await axios.post(DocumentManagerEndpoints.read, formData, { headers, params: mergedParams });
     return response.data;
   },
+
+  save: async (
+    workbook: ExcelWorkbook,
+    token: string,
+    tenantId: string,
+    params?: Record<string, string | number | boolean>
+  ) => {
+    const config = createAuthConfig(token, tenantId);
+    const headers = { ...config.headers, "Content-Type": "application/json" };
+    const response = await axios.post(DocumentManagerEndpoints.read, workbook, { headers, params });
+    return response;
+  },
 };
-
-// export const ExcelService = {
-//   read: async (
-//     file: File,
-//     token: string,
-//     tenantId: string
-//   ): Promise<ExcelWorkbook> => {
-//     const formData = new FormData();
-//     formData.append("file", file);
-
-//     const config = createAuthConfig(token, tenantId);
-//     const headers = { ...config.headers, "Content-Type": "multipart/form-data" };
-
-//     const response = await axios.post(ExcelEndpoints.read, formData, { headers });
-//     return response.data;
-//   },
-// };

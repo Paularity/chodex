@@ -5,6 +5,7 @@ import { useAuthStore } from "./authStore";
 
 interface ExcelState {
   workbook: ExcelWorkbook | null;
+  workbookId?: string;
   loading: boolean;
   activeSheet: string | null;
   editMode: boolean;
@@ -17,6 +18,7 @@ interface ExcelState {
   deleteColsDialog: { open: boolean; sheetName: string; selected: number[] };
   multiTypeDialog: { open: boolean; sheetName: string; columns: ExcelColumn[] };
   setWorkbook: (wb: ExcelWorkbook | null) => void;
+  setWorkbookId: (id: string | undefined) => void;
   setLoading: (loading: boolean) => void;
   setActiveSheet: (sheet: string | null) => void;
   setEditMode: (edit: boolean) => void;
@@ -36,6 +38,7 @@ interface ExcelState {
 
 export const useExcelStore = create<ExcelState>((set) => ({
   workbook: null,
+  workbookId: undefined,
   loading: false,
   activeSheet: null,
   editMode: false,
@@ -49,6 +52,7 @@ export const useExcelStore = create<ExcelState>((set) => ({
   deleteColsDialog: { open: false, sheetName: '', selected: [] },
   multiTypeDialog: { open: false, sheetName: '', columns: [] },
   setWorkbook: (wb) => set({ workbook: wb }),
+  setWorkbookId: (id) => set({ workbookId: id }),
   setLoading: (loading) => set({ loading }),
   setActiveSheet: (sheet) => set({ activeSheet: sheet }),
   setEditMode: (edit) => set({ editMode: edit }),
@@ -87,29 +91,33 @@ export const useExcelStore = create<ExcelState>((set) => ({
       const { token, tenantId } = useAuthStore.getState();
       const res = await ExcelService.read(file, token, tenantId);
       // Support new backend format: ExcelApiResponse with workbook as JSON string in res.data.data
+      let workbookId: string | undefined = undefined;
       if (res && typeof res === 'object') {
-        // New format: { success, data: { data: stringified workbook } }
+        // New format: { success, data: { data: stringified workbook, id: string } }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const asAny = res as any;
-        if ('success' in asAny && asAny.success && asAny.data && typeof asAny.data === 'object' && typeof asAny.data.data === 'string') {
-          try {
-            const workbook = JSON.parse(asAny.data.data);
-            if (workbook && typeof workbook === 'object' && 'workbookName' in workbook && Array.isArray(workbook.sheets)) {
-              set({ workbook });
-              return workbook;
+        if ('success' in asAny && asAny.success && asAny.data && typeof asAny.data === 'object') {
+          if (typeof asAny.data.data === 'string') {
+            try {
+              const workbook = JSON.parse(asAny.data.data);
+              if (workbook && typeof workbook === 'object' && 'workbookName' in workbook && Array.isArray(workbook.sheets)) {
+                if ('id' in asAny.data) workbookId = asAny.data.id;
+                set({ workbook, workbookId });
+                return workbook;
+              }
+            } catch {
+              set({ workbook: null, workbookId: undefined });
+              return undefined;
             }
-          } catch {
-            set({ workbook: null });
-            return undefined;
           }
         }
         // Old format fallback: direct workbook object
         if ('workbookName' in asAny && Array.isArray(asAny.sheets)) {
-          set({ workbook: asAny });
+          set({ workbook: asAny, workbookId: asAny.id });
           return asAny;
         }
       }
-      set({ workbook: null });
+      set({ workbook: null, workbookId: undefined });
       return undefined;
     } finally {
       set({ loading: false });

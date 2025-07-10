@@ -1,19 +1,63 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem } from '@/components/ui/menubar';
 import { useExcelStore } from '@/store/excelStore';
-import { Pencil, CheckCircle, Edit3, XCircle, Trash2, Settings2, List, KeyRound, Columns3, Type } from 'lucide-react';
+import { Pencil, CheckCircle, Edit3, XCircle, Trash2, Settings2, List, KeyRound, Columns3, Type, Download, Save, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
+import { useEffect, useState } from 'react';
 
-export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets, onLoading, keyColumnSheets, setKeyColumnSheets }: {
+// Types
+interface Sheet {
+    sheetName: string;
+    columns: { name: string }[];
+    rows: (string | number | null | undefined)[][];
+}
+interface Workbook {
+    sheets: Sheet[];
+}
+interface ColumnFilter {
+    sheet: string;
+    colIdx: number;
+    value: string;
+    operator: string;
+}
+
+export function ExcelToolbar({
+    indexColumnSheets,
+    setIndexColumnSheets,
+    onLoading,
+    keyColumnSheets,
+    setKeyColumnSheets,
+    columnFilters = [],
+    exportCurrentSheetWithVisibleData,
+    onReupload,
+}: {
     indexColumnSheets: string[];
     setIndexColumnSheets: (sheets: string[]) => void;
     keyColumnSheets: string[];
     setKeyColumnSheets: (sheets: string[]) => void;
     onLoading?: (fn: () => void, message?: string) => void;
     onOpenChangeMultipleTypes?: () => void;
+    columnFilters?: ColumnFilter[];
+    exportCurrentSheetWithVisibleData?: () => void;
+    onReupload?: () => void;
 }) {
     const { editMode, setEditMode, workbook, activeSheet } = useExcelStore();
     const hasData = workbook && workbook.sheets && workbook.sheets.length > 0;
+    // Workbook name edit state
+    const [editingWorkbookName, setEditingWorkbookName] = useState(false);
+    const [workbookNameInput, setWorkbookNameInput] = useState<string>(workbook?.workbookName || 'workbook.xlsx');
+
+    useEffect(() => {
+        setWorkbookNameInput(workbook?.workbookName || 'workbook.xlsx');
+        setEditingWorkbookName(false); // Reset to read mode on workbook change
+    }, [workbook?.workbookName]);
+
+    const handleRenameWorkbook = () => {
+        if (!workbook) return;
+        useExcelStore.getState().setWorkbook({ ...workbook, workbookName: workbookNameInput.trim() || 'workbook.xlsx' });
+        setEditingWorkbookName(false);
+    };
 
     // Handler for removing empty rows and re-indexing
     const handleRemoveRows = () => {
@@ -152,6 +196,53 @@ export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets, onLoadin
         useExcelStore.getState().setWorkbook({ ...workbook, sheets: updatedSheets });
     };
 
+    // Helper to apply filters to a sheet's rows
+    const filterSheetRows = (sheet: Sheet, filters: ColumnFilter[]): (string | number | null | undefined)[][] => {
+        if (!filters || filters.length === 0) return sheet.rows;
+        // Only apply filters for this sheet
+        const activeFilters = filters.filter((f: ColumnFilter) => f.sheet === sheet.sheetName && (f.value !== '' || f.operator === 'isEmpty' || f.operator === 'isNotEmpty'));
+        if (activeFilters.length === 0) return sheet.rows;
+        return sheet.rows.filter((row: (string | number | null | undefined)[]) => {
+            return activeFilters.every((f: ColumnFilter) => {
+                const cell = row[f.colIdx];
+                switch (f.operator) {
+                    case 'equals': return String(cell ?? '') === f.value;
+                    case 'notEquals': return String(cell ?? '') !== f.value;
+                    case 'contains': return String(cell ?? '').toLowerCase().includes(f.value.toLowerCase());
+                    case 'notContains': return !String(cell ?? '').toLowerCase().includes(f.value.toLowerCase());
+                    case 'startsWith': return String(cell ?? '').startsWith(f.value);
+                    case 'endsWith': return String(cell ?? '').endsWith(f.value);
+                    case 'gt': return Number(cell) > Number(f.value);
+                    case 'gte': return Number(cell) >= Number(f.value);
+                    case 'lt': return Number(cell) < Number(f.value);
+                    case 'lte': return Number(cell) <= Number(f.value);
+                    case 'isEmpty': return cell === undefined || cell === null || cell === '';
+                    case 'isNotEmpty': return cell !== undefined && cell !== null && cell !== '';
+                    default: return true;
+                }
+            });
+        });
+    };
+
+    // Export all sheets (filtered) as a real Excel file (XLSX)
+    const exportWorkbookToExcel = (workbook: Workbook, filters: ColumnFilter[]) => {
+        if (!workbook) return;
+        const wb = XLSX.utils.book_new();
+        for (const sheet of workbook.sheets) {
+            const sheetFilters = filters.filter(f => f.sheet === sheet.sheetName);
+            // Prepare data: header row + filtered rows
+            const aoa: (string | number | null | undefined)[][] = [];
+            aoa.push(sheet.columns.map(col => col.name));
+            const filteredRows = filterSheetRows(sheet, sheetFilters);
+            for (const row of filteredRows) {
+                aoa.push(row);
+            }
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            XLSX.utils.book_append_sheet(wb, ws, sheet.sheetName || 'Sheet');
+        }
+        XLSX.writeFile(wb, 'workbook.xlsx');
+    };
+
     // Wrap actions with loading if onLoading is provided
     const handleRemoveRowsWithLoading = () => {
         if (onLoading) onLoading(handleRemoveRows, 'Removing empty rows...');
@@ -184,9 +275,72 @@ export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets, onLoadin
         useExcelStore.getState().setMultiTypeDialog({ open: true, sheetName: activeSheet, columns });
     };
 
+    // Helper to strip file extension from workbook name
+    const getWorkbookNameWithoutExtension = (name: string) => {
+        return name.replace(/\.[^/.]+$/, '');
+    };
+
+    const workbookId = useExcelStore.getState().workbookId;
+
     return (
         <Menubar className="mb-4 rounded-lg border shadow-sm bg-white flex justify-between items-center px-2 py-1">
             <div className="flex items-center gap-2">
+                {/* Workbook Name Display & Rename (shadcn/tailwind) */}
+                <div className="flex items-center gap-2 mr-4">
+                    {editMode ? (
+                        editingWorkbookName ? (
+                            <>
+                                <input
+                                    type="text"
+                                    value={getWorkbookNameWithoutExtension(workbookNameInput)}
+                                    onChange={e => setWorkbookNameInput(
+                                        e.target.value.replace(/\.[^/.]+$/, '') + ((workbook?.workbookName && workbook?.workbookName.includes('.')) ? workbook?.workbookName.slice(workbook?.workbookName.lastIndexOf('.')) : '.xlsx')
+                                    )}
+                                    className="shadcn-input text-xs font-bold px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 w-48"
+                                    placeholder="Workbook name"
+                                    title="Workbook name"
+                                    autoFocus
+                                    onKeyDown={e => { if (e.key === 'Enter') handleRenameWorkbook(); if (e.key === 'Escape') setEditingWorkbookName(false); }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleRenameWorkbook}
+                                    className="shadcn-button ml-1 flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
+                                    disabled={workbookNameInput.trim() === (workbook?.workbookName || 'workbook.xlsx')}
+                                >
+                                    <Save className="w-3 h-3 text-blue-600" />
+                                    Save
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingWorkbookName(false)}
+                                    className="shadcn-button ml-1 flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 transition"
+                                >
+                                    <XCircle className="w-3 h-3 text-gray-600" />
+                                    Cancel
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-xs font-bold px-2 py-1 text-gray-700" title={workbook?.workbookName || 'workbook.xlsx'}>
+                                    {getWorkbookNameWithoutExtension(workbook?.workbookName || 'workbook.xlsx')}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingWorkbookName(true)}
+                                    className="shadcn-button p-1 rounded hover:bg-gray-100 transition border border-transparent"
+                                    aria-label="Edit workbook name"
+                                >
+                                    <Pencil className="w-4 h-4 text-blue-600" />
+                                </button>
+                            </>
+                        )
+                    ) : (
+                        <span className="text-xs font-bold px-2 py-1 text-gray-700" title={workbook?.workbookName || 'workbook.xlsx'}>
+                            {getWorkbookNameWithoutExtension(workbook?.workbookName || 'workbook.xlsx')}
+                        </span>
+                    )}
+                </div>
                 {/* Edit Mode Menu */}
                 <MenubarMenu>
                     <MenubarTrigger
@@ -273,16 +427,93 @@ export function ExcelToolbar({ indexColumnSheets, setIndexColumnSheets, onLoadin
                             <Type className="w-4 h-4 text-green-600" />
                             Change Multiple Columns Types
                         </MenubarItem>
-                        {/* ...other menu items can go here... */}
+                    </MenubarContent>
+                </MenubarMenu>
+                {/* Export Menu */}
+                <MenubarMenu>
+                    <MenubarTrigger
+                        className="text-xs px-3 py-1 flex items-center gap-2 font-bold hover:bg-gray-100"
+                        disabled={!editMode}
+                        style={!editMode ? { opacity: 0.5, pointerEvents: 'none' } : {}}
+                    >
+                        <Download className="w-4 h-4 text-blue-600" />
+                        Export
+                    </MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarItem
+                            onClick={() => {
+                                if (exportCurrentSheetWithVisibleData) {
+                                    exportCurrentSheetWithVisibleData();
+                                }
+                            }}
+                            className="flex items-center gap-2 font-semibold"
+                            disabled={!editMode}
+                        >
+                            <Download className="w-4 h-4 text-blue-600" />
+                            Export Current Sheet (CSV)
+                        </MenubarItem>
+                        <MenubarItem
+                            onClick={() => {
+                                if (!workbook) return;
+                                exportWorkbookToExcel(workbook, columnFilters);
+                            }}
+                            className="flex items-center gap-2 font-semibold"
+                            disabled={!editMode}
+                        >
+                            <Download className="w-4 h-4 text-blue-600" />
+                            Export All Sheets (Excel)
+                        </MenubarItem>
+                    </MenubarContent>
+                </MenubarMenu>
+                {/* Re-upload Menu Item */}
+                <MenubarMenu>
+                    <MenubarTrigger
+                        className="text-xs px-3 py-1 flex items-center gap-2 font-bold hover:bg-gray-100"
+                    >
+                        <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                        Re-upload
+                    </MenubarTrigger>
+                    <MenubarContent>
+                        <MenubarItem
+                            onClick={() => {
+                                if (onReupload) onReupload();
+                            }}
+                            className="flex items-center gap-2 font-semibold"
+                        >
+                            <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                            Select New File
+                        </MenubarItem>
                     </MenubarContent>
                 </MenubarMenu>
             </div>
-            <div className="flex-1 flex justify-end">
+            <div className="flex-1 flex justify-end items-center gap-2">
                 {editMode && (
                     <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold border border-green-300 animate-fade-in">
                         <CheckCircle size={14} className="mr-1 text-green-600" /> Edit Mode is Active
                     </span>
                 )}
+                {/* Save Button styled like left menu items, right-aligned */}
+                <button
+                    type="button"
+                    className="cursor-pointer text-xs px-3 py-1 flex items-center gap-2 font-bold hover:bg-gray-100 rounded-md border border-transparent transition disabled:opacity-50 disabled:pointer-events-none text-blue-600"
+                    disabled={!workbook}
+                    onClick={async () => {
+                        if (!workbook) return;
+                        // Use the workbookId from the store, do not call the service here
+                        const id = workbookId;
+                        // Log to console with id
+                        console.log({
+                            id,
+                            workbookName: workbook?.workbookName || 'workbook.xlsx',
+                            sheets: workbook?.sheets,
+                        });
+                        toast.success('Workbook saved!');
+                        // Place your save logic here (e.g., API call, localStorage, etc.)
+                    }}
+                >
+                    <Save className="w-4 h-4 text-blue-600" />
+                    Save
+                </button>
             </div>
         </Menubar>
     );

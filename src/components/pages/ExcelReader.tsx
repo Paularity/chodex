@@ -1,20 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useRef, useEffect } from "react";
-import { TabulatorFull as Tabulator } from "tabulator-tables";
+import * as Tabulator from "tabulator-tables";
 import "tabulator-tables/dist/css/tabulator.min.css";
-import { FileSpreadsheet, Pencil, Type, List, Eraser, XCircle, Replace, ListCollapse, Hash, Check, Calendar, Clock } from 'lucide-react';
+import { FileSpreadsheet, Pencil, Type, List, Eraser, XCircle, Replace, ListCollapse, Hash, Check, Calendar, Clock, Filter } from 'lucide-react';
 import { toast } from "sonner";
-import { ExcelToolbar } from '@/components/ui/excel-toolbar';
+import { ExcelToolbar } from '../ui/excel-toolbar';
 import { ExcelUploadSection } from '@/components/ui/excel-upload-section';
 import { SheetTabs } from '@/components/ui/sheet-tabs';
 import { RenameColumnDialog } from '@/components/ui/rename-column-dialog';
 import { DropdownManageDialog } from '@/components/ui/dropdown-manage-dialog';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useExcelStore } from '@/store/excelStore';
 import type { ExcelSheet, ExcelColumn } from '@/lib/api/models/excel-workbook.model';
 import { shadcnBooleanEditor, shadcnBooleanFormatter, menuLabel, removeBlankRows, convertValue, convertCellForTypeChange, TypeChangeDialog, ColumnActionDialog } from './ExcelReader/index';
 import { DeleteMultipleColumnsDialog } from '@/components/ui/delete-multiple-columns-dialog';
 import { ChangeMultipleTypesDialog } from '@/components/ui/change-multiple-types-dialog';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
+import { FilterDialog } from '@/components/ui/filter-dialog';
 
 export default function ExcelReaderPage() {
   const {
@@ -37,7 +40,7 @@ export default function ExcelReaderPage() {
   const [dropdownColIdx, setDropdownColIdx] = useState<number | null>(null);
   const [dropdownInput, setDropdownInput] = useState('');
   const [paginationSize] = useState(15); // setPaginationSize is unused, so omit
-  const tables = useRef<Record<string, object>>({});
+  const tables = useRef<Record<string, any>>({});
 
   // Picker dialog state for data type change
   const [typeChangeDialog, setTypeChangeDialog] = useState({ open: false, sheetName: '', colIdx: -1, newType: '' });
@@ -47,6 +50,11 @@ export default function ExcelReaderPage() {
   const [colActionValue, setColActionValue] = useState('');
   const [colActionFind, setColActionFind] = useState('');
   const [colActionReplace, setColActionReplace] = useState('');
+
+  // Filter state for column filtering
+  const [columnFilters, setColumnFilters] = useState<Array<{ sheet: string; colIdx: number; value: string; operator: string }>>([]);
+  // Local state for filter dialog input
+  const [filterDialog, setFilterDialog] = useState<{ open: boolean; sheet: string; colIdx: number; value: string; operator: string } | null>(null);
 
   // Cleanup Tabulator tables on unmount or when workbook changes
   useEffect(() => {
@@ -65,10 +73,22 @@ export default function ExcelReaderPage() {
     tables.current = {};
   }, [workbook]);
 
+  const [showUploadSection, setShowUploadSection] = useState(true);
+
+  // Hide upload section if workbook is loaded
+  useEffect(() => {
+    if (workbook) {
+      setShowUploadSection(false);
+    } else {
+      setShowUploadSection(true);
+    }
+  }, [workbook]);
+
   // Refactored: handle file read logic for upload section
   const handleFileRead = async (file: File) => {
     try {
       const result = await readExcel(file);
+      setShowUploadSection(false); // Hide upload section after file is read
       console.log("[ExcelReader] readExcel result:", result);
       if (!result || !result.sheets || result.sheets.length === 0) {
         toast.error("No valid sheets found in the imported Excel file.");
@@ -380,15 +400,68 @@ export default function ExcelReaderPage() {
                   label: menuLabel(XCircle, 'Delete Column'),
                   action: () => handleDeleteColumn(sheet.sheetName, colIdx),
                 },
+                {
+                  label: menuLabel(Filter, "Filter Column"),
+                  action: () => setFilterDialog({ open: true, sheet: sheet.sheetName, colIdx, value: "", operator: "contains" }),
+                },
               ];
             },
+            // Remove headerClick filter clear logic
           };
         }),
       ];
       const dataRows = filtered
         ? removeBlankRows(sheet.rows, sheet.columns, sheet.columns.map((c: ExcelColumn) => c.name))
         : sheet.rows;
-      const data = dataRows.map((row: (string | number | null)[], idx: number) => {
+      // Filter rows if a filter is set for this sheet/column
+      let filteredRows = dataRows;
+      const activeFilters = columnFilters.filter(f => f.sheet === sheet.sheetName && (f.value !== "" || f.operator === 'isEmpty' || f.operator === 'isNotEmpty'));
+      if (activeFilters.length > 0) {
+        filteredRows = dataRows.filter(row => {
+          return activeFilters.every(columnFilter => {
+            const cellRaw = row[columnFilter.colIdx];
+            const cellValue = String(cellRaw ?? "").toLowerCase();
+            const filterValue = columnFilter.value.toLowerCase();
+            switch (columnFilter.operator) {
+              case 'equals':
+                return cellValue === filterValue;
+              case 'notEquals':
+                return cellValue !== filterValue;
+              case 'startsWith':
+                return cellValue.startsWith(filterValue);
+              case 'endsWith':
+                return cellValue.endsWith(filterValue);
+              case 'gt': {
+                const n = Number(cellRaw);
+                const f = Number(columnFilter.value);
+                return !isNaN(n) && !isNaN(f) && n > f;
+              }
+              case 'gte': {
+                const n = Number(cellRaw);
+                const f = Number(columnFilter.value);
+                return !isNaN(n) && !isNaN(f) && n >= f;
+              }
+              case 'lt': {
+                const n = Number(cellRaw);
+                const f = Number(columnFilter.value);
+                return !isNaN(n) && !isNaN(f) && n < f;
+              }
+              case 'lte': {
+                const n = Number(cellRaw);
+                const f = Number(columnFilter.value);
+                return !isNaN(n) && !isNaN(f) && n <= f;
+              }
+              case 'isEmpty':
+                return cellValue === '';
+              case 'isNotEmpty':
+                return cellValue !== '';
+              default:
+                return cellValue.includes(filterValue);
+            }
+          });
+        });
+      }
+      const data = filteredRows.map((row: (string | number | null)[], idx: number) => {
         const obj: Record<string, string | number | null> = {};
         // Add key/index columns if present
         if (row && typeof row === 'object' && '__rowKey' in row) {
@@ -404,7 +477,7 @@ export default function ExcelReaderPage() {
         return obj;
       });
       // Mount Tabulator directly to el (no extra scroll wrapper)
-      const table = new Tabulator(el, {
+      const table = new Tabulator.TabulatorFull(el, {
         data,
         columns,
         layout: "fitDataTable", // auto-fit columns to data
@@ -670,10 +743,54 @@ export default function ExcelReaderPage() {
     }, 1000);
   };
 
+  // Export only currently visible (filtered) data in the table for the active sheet
+  const exportCurrentSheetWithVisibleData = () => {
+    if (!activeSheet || !tables.current[activeSheet]) return;
+    // Tabulator instance
+    const tab = tables.current[activeSheet];
+    // Try to get visible data (filtered, sorted, paginated)
+    let data: Record<string, unknown>[] = [];
+    if (typeof tab.getData === 'function') {
+      data = tab.getData();
+    } else if (typeof tab.getRows === 'function') {
+      data = tab.getRows().map((row: any) => row.getData());
+    }
+    if (!data || data.length === 0) {
+      window.alert('No rows to export.');
+      return;
+    }
+    // Get columns from Tabulator definition
+    const columns = typeof tab.getColumns === 'function'
+      ? tab.getColumns().map((col: any) => col.getDefinition().title || col.getDefinition().field)
+      : [];
+    // Build CSV
+    const csvRows: string[] = [];
+    csvRows.push(columns.map((col: string) => '"' + (col ?? '') + '"').join(','));
+    for (const row of data) {
+      csvRows.push(columns.map((col: string) => '"' + ((row as Record<string, unknown>)[col] ?? '').toString().replace(/"/g, '""') + '"').join(','));
+    }
+    const csvContent = csvRows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeSheet || 'sheet'}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Always show upload section with loading prop */}
-      <ExcelUploadSection onRead={handleFileRead} loading={loading} />
+      {/* Only show upload section if showUploadSection is true */}
+      {showUploadSection && (
+        <section className="upload-section">
+          <ExcelUploadSection onRead={handleFileRead} loading={loading} />
+        </section>
+      )}
       {/* Show a message if no workbook is loaded */}
       {!workbook && (
         <div className="text-center text-muted-foreground py-12">
@@ -689,9 +806,6 @@ export default function ExcelReaderPage() {
             Excel Reader
           </div>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Upload Excel</CardTitle>
-            </CardHeader>
             <CardContent className="space-y-2 p-4 pt-0">
               <ExcelToolbar
                 indexColumnSheets={indexColumnSheets}
@@ -699,8 +813,73 @@ export default function ExcelReaderPage() {
                 keyColumnSheets={keyColumnSheets}
                 setKeyColumnSheets={setKeyColumnSheets}
                 onLoading={handleToolbarLoading}
+                columnFilters={columnFilters}
+                exportCurrentSheetWithVisibleData={exportCurrentSheetWithVisibleData}
                 onOpenChangeMultipleTypes={() => setMultiTypeDialog({ open: true, sheetName: activeSheet || '', columns: [] })}
+                onReupload={() => {
+                  setShowUploadSection(true);
+                  useExcelStore.getState().setWorkbook(null);
+                  useExcelStore.getState().setWorkbookId(undefined);
+                }}
               />
+              {/* Show filter badges above the table if a filter is active for the current sheet */}
+              {columnFilters.filter(f => f.sheet === activeSheet && (f.value !== "" || f.operator === 'isEmpty' || f.operator === 'isNotEmpty')).length > 0 && workbook && (
+                <div className="mb-2 flex flex-wrap gap-2">
+                  {columnFilters.filter(f => f.sheet === activeSheet && (f.value !== "" || f.operator === 'isEmpty' || f.operator === 'isNotEmpty')).map((f) => {
+                    const colName = workbook.sheets.find(s => s.sheetName === f.sheet)?.columns[f.colIdx]?.name;
+                    const operatorLabel = (() => {
+                      switch (f.operator) {
+                        case 'equals': return 'equals';
+                        case 'notEquals': return 'not equals';
+                        case 'startsWith': return 'starts with';
+                        case 'endsWith': return 'ends with';
+                        case 'gt': return 'greater than';
+                        case 'gte': return 'greater or equal';
+                        case 'lt': return 'less than';
+                        case 'lte': return 'less or equal';
+                        case 'isEmpty': return 'is empty';
+                        case 'isNotEmpty': return 'is not empty';
+                        default: return 'contains';
+                      }
+                    })();
+                    return (
+                      <Badge
+                        key={f.colIdx + '-' + f.operator + '-' + f.value}
+                        variant="secondary"
+                        className="flex items-center gap-2 px-3 py-1 text-sm border border-blue-500 bg-blue-100 text-blue-900 shadow-sm transition-all duration-300 ease-in-out hover:border-blue-700 focus:ring-2 focus:ring-blue-300 animate-in fade-in zoom-in cursor-pointer rounded-full"
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Filter: ${colName} ${operatorLabel} ${f.value}`}
+                        onClick={() => setColumnFilters(filters => filters.filter(fl => !(fl.sheet === f.sheet && fl.colIdx === f.colIdx && fl.operator === f.operator && fl.value === f.value)))}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            setColumnFilters(filters => filters.filter(fl => !(fl.sheet === f.sheet && fl.colIdx === f.colIdx && fl.operator === f.operator && fl.value === f.value)));
+                          }
+                        }}
+                      >
+                        <span className="font-medium">Filter:</span>
+                        <span className="font-semibold text-blue-700">{colName}</span>
+                        <span className="text-blue-600">{operatorLabel}</span>
+                        {f.operator !== 'isEmpty' && f.operator !== 'isNotEmpty' && (
+                          <span className="max-w-[120px] truncate">{f.value}</span>
+                        )}
+                        <button
+                          type="button"
+                          className="ml-1 p-1 rounded-full hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors duration-200"
+                          aria-label="Clear filter"
+                          tabIndex={-1}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setColumnFilters(filters => filters.filter(fl => !(fl.sheet === f.sheet && fl.colIdx === f.colIdx && fl.operator === f.operator && fl.value === f.value)));
+                          }}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
               {workbook && workbook.sheets.length > 0 && (
                 <div className="relative">
                   <SheetTabs
@@ -772,6 +951,32 @@ export default function ExcelReaderPage() {
             onClose={() => setMultiTypeDialog({ open: false, sheetName: '', columns: [] })}
             onConfirm={handleMultiTypeConfirm}
           />
+          {/* Filter dialog for column filtering */}
+          {filterDialog && (
+            <FilterDialog
+              open={filterDialog.open}
+              sheetName={filterDialog.sheet}
+              colIdx={filterDialog.colIdx}
+              value={filterDialog.value}
+              operator={filterDialog.operator}
+              columnName={workbook?.sheets.find(s => s.sheetName === filterDialog.sheet)?.columns[filterDialog.colIdx]?.name || ''}
+              onValueChange={val => setFilterDialog({ ...filterDialog, value: val })}
+              onOperatorChange={op => setFilterDialog({ ...filterDialog, operator: op })}
+              onCancel={() => setFilterDialog(null)}
+              onApply={() => {
+                setColumnFilters(prev => {
+                  // Remove any existing filter for this sheet/colIdx
+                  const filtered = prev.filter(f => !(f.sheet === filterDialog.sheet && f.colIdx === filterDialog.colIdx));
+                  // Only add if not empty or isEmpty/isNotEmpty
+                  if (filterDialog.value !== "" || filterDialog.operator === 'isEmpty' || filterDialog.operator === 'isNotEmpty') {
+                    return [...filtered, { sheet: filterDialog.sheet, colIdx: filterDialog.colIdx, value: filterDialog.value, operator: filterDialog.operator }];
+                  }
+                  return filtered;
+                });
+                setFilterDialog(null);
+              }}
+            />
+          )}
         </>
       )}
     </div>
