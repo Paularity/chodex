@@ -5,6 +5,9 @@ import { Pencil, CheckCircle, Edit3, XCircle, Trash2, Settings2, List, KeyRound,
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { useEffect, useState } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 // Types
 interface Sheet {
@@ -290,55 +293,108 @@ export function ExcelToolbar({
                     {editMode ? (
                         editingWorkbookName ? (
                             <>
-                                <input
-                                    type="text"
-                                    value={getWorkbookNameWithoutExtension(workbookNameInput)}
-                                    onChange={e => setWorkbookNameInput(
-                                        e.target.value.replace(/\.[^/.]+$/, '') + ((workbook?.workbookName && workbook?.workbookName.includes('.')) ? workbook?.workbookName.slice(workbook?.workbookName.lastIndexOf('.')) : '.xlsx')
-                                    )}
-                                    className="shadcn-input text-xs font-bold px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 w-48"
-                                    placeholder="Workbook name"
-                                    title="Workbook name"
-                                    autoFocus
-                                    onKeyDown={e => { if (e.key === 'Enter') handleRenameWorkbook(); if (e.key === 'Escape') setEditingWorkbookName(false); }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleRenameWorkbook}
-                                    className="shadcn-button ml-1 flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition"
-                                    disabled={workbookNameInput.trim() === (workbook?.workbookName || 'workbook.xlsx')}
-                                >
-                                    <Save className="w-3 h-3 text-blue-600" />
-                                    Save
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setEditingWorkbookName(false)}
-                                    className="shadcn-button ml-1 flex items-center gap-1 px-2 py-1 text-xs font-bold rounded border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 transition"
-                                >
-                                    <XCircle className="w-3 h-3 text-gray-600" />
-                                    Cancel
-                                </button>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Input
+                                                type="text"
+                                                value={getWorkbookNameWithoutExtension(workbookNameInput)}
+                                                onChange={e => setWorkbookNameInput(
+                                                    e.target.value.replace(/\.[^/.]+$/, '') + ((workbook?.workbookName && workbook?.workbookName.includes('.')) ? workbook?.workbookName.slice(workbook?.workbookName.lastIndexOf('.')) : '.xlsx')
+                                                )}
+                                                placeholder="Workbook name"
+                                                autoFocus
+                                                onKeyDown={e => { if (e.key === 'Enter') handleRenameWorkbook(); if (e.key === 'Escape') setEditingWorkbookName(false); }}
+                                                className="text-xs font-bold w-48 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                                            />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">
+                                            Workbook name
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                onClick={handleRenameWorkbook}
+                                                className="p-1 rounded hover:bg-gray-100 transition border border-transparent"
+                                                disabled={workbookNameInput.trim() === (workbook?.workbookName || 'workbook.xlsx')}
+                                                size="icon"
+                                                variant="ghost"
+                                                aria-label="Save workbook name"
+                                            >
+                                                <Save className="w-2 h-2 text-blue-700" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">Save</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                onClick={() => setEditingWorkbookName(false)}
+                                                className="p-1 rounded hover:bg-gray-100 transition border border-transparent"
+                                                size="icon"
+                                                variant="ghost"
+                                                aria-label="Cancel workbook name edit"
+                                            >
+                                                <XCircle className="w-2 h-2" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">Cancel</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </>
                         ) : (
                             <>
-                                <span className="text-xs font-bold px-2 py-1 text-gray-700" title={workbook?.workbookName || 'workbook.xlsx'}>
-                                    {getWorkbookNameWithoutExtension(workbook?.workbookName || 'workbook.xlsx')}
-                                </span>
-                                <button
-                                    type="button"
-                                    onClick={() => setEditingWorkbookName(true)}
-                                    className="shadcn-button p-1 rounded hover:bg-gray-100 transition border border-transparent"
-                                    aria-label="Edit workbook name"
-                                >
-                                    <Pencil className="w-4 h-4 text-blue-600" />
-                                </button>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <span className="text-xs font-bold px-2 py-1 text-gray-700 cursor-help" title={workbook?.workbookName || 'workbook.xlsx'}>
+                                                {getWorkbookNameWithoutExtension(workbook?.workbookName || 'workbook.xlsx')}
+                                            </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">
+                                            This is the workbook name
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                type="button"
+                                                onClick={() => setEditingWorkbookName(true)}
+                                                className="p-1 rounded hover:bg-gray-100 transition border border-transparent"
+                                                aria-label="Edit workbook name"
+                                                size="icon"
+                                                variant="ghost"
+                                            >
+                                                <Pencil className="w-4 h-4 text-blue-600" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">Edit</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </>
                         )
                     ) : (
-                        <span className="text-xs font-bold px-2 py-1 text-gray-700" title={workbook?.workbookName || 'workbook.xlsx'}>
-                            {getWorkbookNameWithoutExtension(workbook?.workbookName || 'workbook.xlsx')}
-                        </span>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span className="text-xs font-bold px-2 py-1 text-gray-700 cursor-help" title={workbook?.workbookName || 'workbook.xlsx'}>
+                                        {getWorkbookNameWithoutExtension(workbook?.workbookName || 'workbook.xlsx')}
+                                    </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                    This is the workbook name
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     )}
                 </div>
                 {/* Edit Mode Menu */}
