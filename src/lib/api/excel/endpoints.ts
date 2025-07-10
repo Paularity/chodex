@@ -5,5 +5,9 @@ export const ExcelEndpoints = {
 };
 
 export const DocumentManagerEndpoints = {
-  read: `${DOCUMENT_MANAGER_API_BASE_URL}/DocumentManager/excel/import`,
+  read: `${DOCUMENT_MANAGER_API_BASE_URL}/DocumentManager/excel/import`, // POST
+  list: `${DOCUMENT_MANAGER_API_BASE_URL}/DocumentManager/excel/get`, // GET
+  item: `${DOCUMENT_MANAGER_API_BASE_URL}/DocumentManager/excel/`, // GET by @url/{id}
+  save: `${DOCUMENT_MANAGER_API_BASE_URL}/DocumentManager/excel/update`, // PUT @url/{id}
+  saveAs: `${DOCUMENT_MANAGER_API_BASE_URL}/DocumentManager/excel/create`, // POST
 };

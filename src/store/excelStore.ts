@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { ExcelService } from "@/lib/api/excel/service";
 import type { ExcelWorkbook, ExcelColumn } from "@/lib/api/models/excel-workbook.model";
@@ -34,6 +35,22 @@ interface ExcelState {
   renameColumn: (sheetName: string, colIdx: number, newName: string) => void;
   customDropdownValues: Record<string, Record<number, string[]>>;
   setCustomDropdownValues: (sheet: string, colIdx: number, values: string[]) => void;
+  /**
+   * Save the current workbook to the backend using ExcelService.save
+   */
+  saveWorkbook: () => Promise<void>;
+  /**
+   * List all workbooks from the backend
+   */
+  listWorkbooks: (params?: Record<string, string | number | boolean>) => Promise<any>;
+  /**
+   * Get a single workbook by ID from the backend
+   */
+  getWorkbook: (id: string, params?: Record<string, string | number | boolean>) => Promise<any>;
+  /**
+   * Save as a new workbook (create)
+   */
+  saveAsWorkbook: (workbook: ExcelWorkbook, params?: Record<string, string | number | boolean>) => Promise<any>;
 }
 
 export const useExcelStore = create<ExcelState>((set) => ({
@@ -135,5 +152,36 @@ export const useExcelStore = create<ExcelState>((set) => ({
       });
       return { workbook: { ...state.workbook, sheets: updatedSheets } };
     });
+  },
+  /**
+   * Save the current workbook to the backend using ExcelService.save
+   */
+  saveWorkbook: async () => {
+    const state = useExcelStore.getState();
+    const { workbook, workbookId } = state;
+    const { token, tenantId } = useAuthStore.getState();
+    if (!workbook || !workbookId) throw new Error('No workbook or workbookId to save');
+    await ExcelService.save(workbookId, workbook, token, tenantId);
+  },
+  /**
+   * List all workbooks from the backend
+   */
+  listWorkbooks: async (params) => {
+    const { token, tenantId } = useAuthStore.getState();
+    return await ExcelService.list(token, tenantId, params);
+  },
+  /**
+   * Get a single workbook by ID from the backend
+   */
+  getWorkbook: async (id, params) => {
+    const { token, tenantId } = useAuthStore.getState();
+    return await ExcelService.item(id, token, tenantId, params);
+  },
+  /**
+   * Save as a new workbook (create)
+   */
+  saveAsWorkbook: async (workbook, params) => {
+    const { token, tenantId } = useAuthStore.getState();
+    return await ExcelService.saveAs(workbook, token, tenantId, params);
   },
 }));

@@ -283,8 +283,6 @@ export function ExcelToolbar({
         return name.replace(/\.[^/.]+$/, '');
     };
 
-    const workbookId = useExcelStore.getState().workbookId;
-
     return (
         <Menubar className="mb-4 rounded-lg border shadow-sm bg-white flex justify-between items-center px-2 py-1">
             <div className="flex items-center gap-2">
@@ -549,27 +547,31 @@ export function ExcelToolbar({
                     </span>
                 )}
                 {/* Save Button styled like left menu items, right-aligned */}
-                <button
-                    type="button"
-                    className="cursor-pointer text-xs px-3 py-1 flex items-center gap-2 font-bold hover:bg-gray-100 rounded-md border border-transparent transition disabled:opacity-50 disabled:pointer-events-none text-blue-600"
-                    disabled={!workbook}
-                    onClick={async () => {
-                        if (!workbook) return;
-                        // Use the workbookId from the store, do not call the service here
-                        const id = workbookId;
-                        // Log to console with id
-                        console.log({
-                            id,
-                            workbookName: workbook?.workbookName || 'workbook.xlsx',
-                            sheets: workbook?.sheets,
-                        });
-                        toast.success('Workbook saved!');
-                        // Place your save logic here (e.g., API call, localStorage, etc.)
-                    }}
-                >
-                    <Save className="w-4 h-4 text-blue-600" />
-                    Save
-                </button>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                type="button"
+                                className="cursor-pointer text-xs px-3 py-1 flex items-center gap-2 font-bold hover:bg-gray-100 rounded-md border border-transparent transition disabled:opacity-50 disabled:pointer-events-none text-blue-600"
+                                disabled={!workbook}
+                                onClick={async () => {
+                                    if (!workbook) return;
+                                    try {
+                                        await useExcelStore.getState().saveWorkbook();
+                                        toast.success('Workbook saved!');
+                                    } catch {
+                                        toast.error('Failed to save workbook.');
+                                    }
+                                }}
+                                aria-label="Save workbook"
+                            >
+                                <Save className="w-4 h-4 text-blue-600" />
+                                Save
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">Save workbook</TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </div>
         </Menubar>
     );

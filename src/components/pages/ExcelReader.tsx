@@ -18,6 +18,7 @@ import { ChangeMultipleTypesDialog } from '@/components/ui/change-multiple-types
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 import { FilterDialog } from '@/components/ui/filter-dialog';
+import { WorkbookLoader } from "@/components/ui/WorkbookLoader";
 
 export default function ExcelReaderPage() {
   const {
@@ -786,6 +787,7 @@ export default function ExcelReaderPage() {
   return (
     <div className="space-y-4">
       {/* Only show upload section if showUploadSection is true */}
+      <WorkbookLoader />
       {showUploadSection && (
         <section className="upload-section">
           <ExcelUploadSection onRead={handleFileRead} loading={loading} />
